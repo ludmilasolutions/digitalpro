@@ -1,4 +1,5 @@
-// netlify/functions/gemini.js - Función serverless para Netlify
+// netlify/functions/gemini.js
+const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
     // Configurar CORS
@@ -8,7 +9,7 @@ exports.handler = async function(event, context) {
         'Access-Control-Allow-Methods': 'POST, OPTIONS'
     };
     
-    // Manejar preflight requests
+    // Manejar preflight
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
@@ -36,15 +37,15 @@ exports.handler = async function(event, context) {
             };
         }
         
-        // Tu API Key de Google AI Studio (variable de entorno en Netlify)
+        // API Key desde variables de entorno
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
         
         if (!GEMINI_API_KEY) {
-            console.error('❌ GEMINI_API_KEY no configurada en variables de entorno');
+            console.error('❌ GEMINI_API_KEY no configurada');
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'Error de configuración del servidor' })
+                body: JSON.stringify({ error: 'Error de configuración' })
             };
         }
         
@@ -53,9 +54,7 @@ exports.handler = async function(event, context) {
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: messages,
                     generationConfig: {
@@ -70,7 +69,7 @@ exports.handler = async function(event, context) {
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Error de Gemini API:', response.status, errorText);
+            console.error('Error Gemini API:', response.status, errorText);
             return {
                 statusCode: response.status,
                 headers,
@@ -86,29 +85,26 @@ exports.handler = async function(event, context) {
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'Respuesta inesperada de la API' })
+                body: JSON.stringify({ error: 'Respuesta inesperada' })
             };
         }
         
-        const aiResponse = data.candidates[0].content.parts[0].text;
-        
-        // Devolver respuesta
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: aiResponse,
+                text: data.candidates[0].content.parts[0].text,
                 userData: userData || {}
             })
         };
         
     } catch (error) {
-        console.error('❌ Error en función serverless:', error);
+        console.error('Error en función:', error);
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({ 
-                error: 'Error interno del servidor',
+                error: 'Error interno',
                 message: error.message 
             })
         };
