@@ -37,7 +37,7 @@ exports.handler = async (event) => {
     }
 
     // URL de Gemini API (usando gemini-1.5-flash que es más rápido y barato)
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
     // Preparar mensajes para Gemini
     const geminiMessages = messages.map(msg => ({
