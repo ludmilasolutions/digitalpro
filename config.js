@@ -13,7 +13,7 @@ const CONFIG = {
     SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/api/gemini",
     
     // OPCIÓN B: Usar API Key directamente (SOLO para desarrollo/pruebas)
-    GEMINI_API_KEY: "TU_API_KEY_DE_GOOGLE_AI_STUDIO_AQUÍ",
+    GEMINI_API_KEY: "AIzaSyC46YPd2USPJaI8IRcwyAkMzT3VUPMUzLY",
     
     // ====================
     // 2. CONFIGURACIÓN DE WHATSAPP
