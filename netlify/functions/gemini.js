@@ -36,40 +36,70 @@ exports.handler = async (event) => {
       };
     }
 
-    // URL de Gemini API (usando gemini-1.5-flash que es más rápido y barato)
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+    // 🚨 IMPORTANTE: Usar el modelo CORRECTO
+    // Modelos disponibles: gemini-1.0-pro, gemini-1.5-pro, gemini-pro
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${API_KEY}`;
+    // Alternativas si falla:
+    // gemini-1.5-pro-latest
+    // gemini-pro
 
     // Preparar mensajes para Gemini
-    const geminiMessages = messages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.parts[0].text }]
-    }));
+    // La API espera formato: { contents: [{ role: "user", parts: [{ text: "..." }] }] }
+    const contents = [];
+    
+    // Procesar mensajes del historial
+    messages.forEach(msg => {
+      if (msg.role === "user" && msg.parts) {
+        // Mensaje del usuario
+        contents.push({
+          role: "user",
+          parts: [{ text: msg.parts[0].text }]
+        });
+      } else if (msg.role === "assistant" || msg.role === "model") {
+        // Respuesta del modelo
+        contents.push({
+          role: "model",
+          parts: [{ text: msg.parts[0].text }]
+        });
+      }
+    });
+
+    console.log('📤 Enviando a Gemini:', contents.length, 'mensajes');
 
     // Llamar a Gemini API usando fetch nativo (Node 18+)
     const response = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: geminiMessages,
+        contents: contents,
         generationConfig: {
           temperature: 0.7,
+          topP: 0.8,
+          topK: 40,
           maxOutputTokens: 800,
-        }
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API Error:', response.status, errorText);
+      console.error('❌ Gemini API Error:', response.status, errorText);
       
-      // Si es error de API Key
-      if (response.status === 400 || response.status === 401) {
+      // Si es error 404, probar otro modelo
+      if (response.status === 404) {
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({ 
-            error: 'Error de autenticación con Gemini',
-            tip: 'Verifica que tu API Key sea válida y tenga permisos'
+            error: 'Modelo no encontrado',
+            tip: 'Intenta con gemini-1.5-pro o gemini-pro',
+            detail: errorText.substring(0, 200)
           })
         };
       }
@@ -85,24 +115,24 @@ exports.handler = async (event) => {
     }
 
     const data = await response.json();
+    console.log('✅ Respuesta recibida de Gemini');
     
     // Extraer texto de respuesta
     let aiText = '';
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
       aiText = data.candidates[0].content.parts[0].text;
     } else {
-      aiText = 'Lo siento, no pude generar una respuesta. ¿Podrías reformular tu pregunta?';
+      console.warn('Estructura inesperada:', JSON.stringify(data).substring(0, 200));
+      aiText = 'Hola, veo que tienes un negocio local. ¿En qué puedo ayudarte hoy? Cuéntame sobre tu emprendimiento.';
     }
-
-    // Log para debug
-    console.log('✅ Respuesta generada:', aiText.substring(0, 100) + '...');
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         text: aiText,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        model: "gemini-1.0-pro"
       })
     };
 
