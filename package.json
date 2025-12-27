@@ -1,8 +1,5 @@
 {
-  "name": "landing-ia-negocios",
+  "name": "landing-ia",
   "version": "1.0.0",
-  "description": "Landing page con IA para negocios",
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  }
+  "dependencies": {}
 }
