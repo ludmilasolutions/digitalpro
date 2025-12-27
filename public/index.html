@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transformá Tu Negocio Local con Soluciones Digitales</title>
     <meta name="description" content="Automatización, marketing digital y soluciones a medida para ferreterías, comercios y pymes. Más ventas, menos trabajo.">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 </head>
 <body>
     <!-- Chat IA Flotante -->
@@ -27,7 +31,11 @@
         </div>
         <div class="chat-body">
             <div class="chat-messages" id="chatMessages">
-                <!-- Los mensajes se cargan aquí -->
+                <div class="message ai">
+                    <div class="message-content">
+                        <p>¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇</p>
+                    </div>
+                </div>
             </div>
             <div class="chat-input-area">
                 <textarea id="userInput" placeholder="Escribí tu mensaje..." rows="1"></textarea>
@@ -49,7 +57,7 @@
                 <h1>No pierdas ni una venta más por <span class="highlight">falta de tiempo o tecnología</span></h1>
                 <p class="hero-subtitle">Automatizamos tu negocio, manejamos tus redes y creamos herramientas digitales a medida. Más ventas, menos trabajo.</p>
                 <div class="hero-cta">
-                    <a href="#contact" class="btn btn-primary" id="heroWhatsAppBtn">
+                    <a href="#contact" class="btn btn-primary">
                         <i class="fab fa-whatsapp"></i> Consultá gratis por WhatsApp
                     </a>
                     <a href="#services" class="btn btn-secondary">
@@ -72,7 +80,13 @@
                 </div>
             </div>
             <div class="hero-image">
-                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Negocio local digitalizado">
+                <!-- Imagen placeholder - puedes reemplazarla -->
+                <div style="width:100%; height:400px; background:linear-gradient(135deg, #6675FF 0%, #25D366 100%); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white;">
+                    <div style="text-align:center; padding:20px;">
+                        <i class="fas fa-store" style="font-size:60px; margin-bottom:20px;"></i>
+                        <p>Tu negocio digitalizado</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -173,7 +187,7 @@
                         <p>Integramos WhatsApp con tu sistema, automatizamos pedidos, stock, recordatorios.</p>
                         <div class="price-tag">
                             <span class="price">Consultar</span>
-                            <span class="price-note">Desde $120.000</span>
+                            <span class="price-note">Según necesidad</span>
                         </div>
                     </div>
                 </div>
@@ -217,7 +231,7 @@
                         <h3>Creación de imágenes y videos</h3>
                         <p>Contenido profesional de tus productos, para redes, WhatsApp y catálogos.</p>
                         <div class="price-tag">
-                            <span class="price">Paquetes desde $20.000</span>
+                            <span class="price">Paquetes desde $25.000</span>
                         </div>
                     </div>
                 </div>
@@ -334,7 +348,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2025 Soluciones Digitales para Negocios Locales. Hecho en Argentina.</p>
+            <p>© 2024 Soluciones Digitales para Negocios Locales. Hecho en Argentina.</p>
             <p class="footer-contact">
                 <i class="fab fa-whatsapp"></i> Solo contacto por WhatsApp | 
                 <i class="fas fa-map-marker-alt"></i> Para ferreterías, comercios, talleres, pymes
@@ -342,6 +356,7 @@
         </div>
     </footer>
 
+    <!-- JavaScript -->
     <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
