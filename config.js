@@ -10,7 +10,7 @@ const CONFIG = {
     USE_SERVERLESS_ENDPOINT: true,
     
     // URL de tu endpoint serverless (ej: https://tu-proyecto.vercel.app/api/gemini)
-    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/api/gemini",
+    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/server/api/gemini",
     
     // OPCIÓN B: Usar API Key directamente (SOLO para desarrollo/pruebas)
     GEMINI_API_KEY: "AIzaSyC46YPd2USPJaI8IRcwyAkMzT3VUPMUzLY",
