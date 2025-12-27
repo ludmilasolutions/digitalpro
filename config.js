@@ -5,15 +5,15 @@ const CONFIG = {
     // 1. CONFIGURACIÓN DE GEMINI API
     // ====================
     
-    // OPCIÓN A: Usar endpoint serverless (RECOMENDADO para producción)
-    // Crea un endpoint en Vercel/Netlify para proteger tu API Key
+    // Usar endpoint serverless (RECOMENDADO para producción)
     USE_SERVERLESS_ENDPOINT: true,
     
-    // URL de tu endpoint serverless (ej: https://tu-proyecto.vercel.app/api/gemini)
-    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/server/api/gemini.js",
+    // URL de tu endpoint serverless en Netlify
+    // Cambia "digitalproduction" por el nombre de tu sitio en Netlify
+    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/api/gemini",
     
     // OPCIÓN B: Usar API Key directamente (SOLO para desarrollo/pruebas)
-    GEMINI_API_KEY: "AIzaSyC46YPd2USPJaI8IRcwyAkMzT3VUPMUzLY",
+    GEMINI_API_KEY: "TU_API_KEY_DE_GOOGLE_AI_STUDIO_AQUÍ",
     
     // ====================
     // 2. CONFIGURACIÓN DE WHATSAPP
