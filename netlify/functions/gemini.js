@@ -1,88 +1,123 @@
-// netlify/functions/gemini.js - VERSIÓN CORREGIDA (Modelo Correcto)
+// netlify/functions/gemini.js - VERSIÓN SEGURA
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://digitalproduction.netlify.app',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Manejar preflight (CORS)
+  // Validar origen (seguridad adicional)
+  const origin = event.headers.origin || event.headers.Origin;
+  const allowedOrigins = [
+    'https://digitalproduction.netlify.app',
+    'http://localhost:8888',
+    'http://localhost:3000'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
 
-  // Solo permitir POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
   }
 
   try {
-    const { messages } = JSON.parse(event.body);
+    // Validar que venga de tu dominio
+    if (!origin || !allowedOrigins.includes(origin)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({ error: 'Origen no autorizado' })
+      };
+    }
 
-    // 1. Obtener API Key de las variables de entorno de Netlify
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
+      console.error('❌ API Key no configurada en Netlify');
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'API Key no configurada en Netlify',
-          tip: 'Ve a Site settings > Environment variables y agrega: GEMINI_API_KEY'
+          error: 'Error de configuración del servidor',
+          tip: 'Contacta al administrador del sitio'
         })
       };
     }
 
-    // 2. URL CORREGIDA: Usar el modelo gemini-2.5-flash según la documentación
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    const body = JSON.parse(event.body);
+    const { messages } = body;
 
-    // 3. Preparar el cuerpo de la solicitud según el formato esperado por la API
-    const requestBody = {
-      contents: messages.map(msg => ({
-        role: msg.role,
-        parts: [{ text: msg.parts[0].text }]
-      })),
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 800,
+    // Validar estructura de mensajes
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Formato de mensajes inválido' })
+      };
+    }
+
+    // Llamar a Gemini API con el modelo correcto
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: messages,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+          }
+        })
       }
-    };
-
-    // 4. Llamar a la API de Gemini usando fetch nativo (Node 18+)
-    const response = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
+    );
 
     if (!response.ok) {
-      const errorDetail = await response.text();
-      console.error('Error de Gemini API:', response.status, errorDetail);
+      const errorText = await response.text();
+      console.error('❌ Error Gemini API:', response.status, errorText);
+      
+      // Manejar específicamente errores de API Key
+      if (response.status === 403 || response.status === 401) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Error de autenticación',
+            tip: 'La API Key puede estar bloqueada. Crea una nueva con restricciones de seguridad.'
+          })
+        };
+      }
+      
       return {
         statusCode: response.status,
         headers,
         body: JSON.stringify({ 
-          error: `Error ${response.status} de Gemini API`,
-          detail: errorDetail.substring(0, 300) // Limitar longitud para log
+          error: `Error ${response.status} de la API`,
+          detail: errorText.substring(0, 200)
         })
       };
     }
 
     const data = await response.json();
-    
-    // 5. Extraer y devolver la respuesta
-    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo generar una respuesta.';
-    
+    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                   'Disculpá, no pude generar una respuesta en este momento.';
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
+      body: JSON.stringify({ 
         text: aiText,
-        model: "gemini-2.5-flash" // Confirmar el modelo usado
+        timestamp: new Date().toISOString()
       })
     };
 
   } catch (error) {
-    console.error('Error en la función serverless:', error);
+    console.error('🔥 Error en función:', error);
     return {
       statusCode: 500,
       headers,
