@@ -10,7 +10,7 @@ const CONFIG = {
     
     // URL de tu endpoint serverless en Netlify
     // Cambia "digitalproduction" por el nombre de tu sitio en Netlify
-    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/api/gemini",
+    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/netlify/functions/gemini",
     
     // OPCIÓN B: Usar API Key directamente (SOLO para desarrollo/pruebas)
     GEMINI_API_KEY: "AIzaSyC46YPd2USPJaI8IRcwyAkMzT3VUPMUzLY",
