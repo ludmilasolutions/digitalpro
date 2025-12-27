@@ -1,31 +1,12 @@
-// config.js - Archivo de configuración editable
-
 const CONFIG = {
-    // ====================
-    // 1. CONFIGURACIÓN DE GEMINI API
-    // ====================
-    
-    // Usar endpoint serverless (RECOMENDADO para producción)
+    // Para Netlify, usa esta URL:
     USE_SERVERLESS_ENDPOINT: true,
+    SERVERLESS_ENDPOINT: "/.netlify/functions/gemini", // ← IMPORTANTE: Ruta relativa
     
-    // URL de tu endpoint serverless en Netlify
-    // Cambia "digitalproduction" por el nombre de tu sitio en Netlify
-    SERVERLESS_ENDPOINT: "https://digitalproduction.netlify.app/netlify/functions/gemini",
+    // Para desarrollo local:
+    // SERVERLESS_ENDPOINT: "http://localhost:8888/.netlify/functions/gemini",
     
-    // OPCIÓN B: Usar API Key directamente (SOLO para desarrollo/pruebas)
-    GEMINI_API_KEY: "AIzaSyC46YPd2USPJaI8IRcwyAkMzT3VUPMUzLY",
-    
-    // ====================
-    // 2. CONFIGURACIÓN DE WHATSAPP
-    // ====================
-    
-    // Número de WhatsApp (con código de país, sin + ni espacios)
-    // Ejemplo para Argentina: 5491112345678
     WHATSAPP_PHONE: "5491112345678",
-    
-    // ====================
-    // 3. CONFIGURACIÓN DE PRECIOS (EDITABLES)
-    // ====================
     
     PRICES: {
         WEB_CATALOG: "desde $150.000",
@@ -36,22 +17,13 @@ const CONFIG = {
         QUOTES_AUTOMATIC: "desde $60.000"
     },
     
-    // ====================
-    // 4. INFORMACIÓN DEL NEGOCIO
-    // ====================
-    
     BUSINESS_NAME: "Soluciones Digitales para Negocios Locales",
-    
-    // ====================
-    // 5. CONFIGURACIÓN DEL CHAT
-    // ====================
     
     CHAT: {
         INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇",
-        TYPING_DELAY: 1000, // milisegundos
-        MAX_HISTORY: 20 // mensajes a mantener en historial
+        TYPING_DELAY: 1000,
+        MAX_HISTORY: 20
     }
 };
 
-// Hacer config global
 window.CONFIG = CONFIG;
