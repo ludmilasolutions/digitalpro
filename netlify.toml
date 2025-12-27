@@ -2,8 +2,6 @@
   publish = "public"
   functions = "netlify/functions"
   
-  [build.environment]
-  GEMINI_API_KEY = "AIzaSyC46YPd2USPJaI8IRcwyAkMzT3VUPMUzLY."  # ← Tu API Key aquí
 
 
 [[redirects]]
