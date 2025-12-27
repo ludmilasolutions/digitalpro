@@ -1,33 +1,51 @@
-// server/api/gemini.js - Endpoint serverless para proteger API Key
+// netlify/functions/gemini.js - Función serverless para Netlify
 
-export default async function handler(req, res) {
+exports.handler = async function(event, context) {
     // Configurar CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
     
     // Manejar preflight requests
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers,
+            body: ''
+        };
     }
     
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método no permitido' });
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ error: 'Método no permitido' })
+        };
     }
     
     try {
-        const { messages, userData } = req.body;
+        const { messages, userData } = JSON.parse(event.body);
         
         if (!messages || !Array.isArray(messages)) {
-            return res.status(400).json({ error: 'Formato de mensajes inválido' });
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'Formato de mensajes inválido' })
+            };
         }
         
-        // Tu API Key de Google AI Studio (variable de entorno)
+        // Tu API Key de Google AI Studio (variable de entorno en Netlify)
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
         
         if (!GEMINI_API_KEY) {
             console.error('❌ GEMINI_API_KEY no configurada en variables de entorno');
-            return res.status(500).json({ error: 'Error de configuración del servidor' });
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: 'Error de configuración del servidor' })
+            };
         }
         
         // Llamar a Gemini API
@@ -53,30 +71,46 @@ export default async function handler(req, res) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Error de Gemini API:', response.status, errorText);
-            return res.status(response.status).json({ 
-                error: `Error de Gemini API: ${response.status}` 
-            });
+            return {
+                statusCode: response.status,
+                headers,
+                body: JSON.stringify({ 
+                    error: `Error de Gemini API: ${response.status}` 
+                })
+            };
         }
         
         const data = await response.json();
         
         if (!data.candidates || !data.candidates[0]) {
-            return res.status(500).json({ error: 'Respuesta inesperada de la API' });
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: 'Respuesta inesperada de la API' })
+            };
         }
         
         const aiResponse = data.candidates[0].content.parts[0].text;
         
         // Devolver respuesta
-        return res.status(200).json({
-            text: aiResponse,
-            userData: userData || {}
-        });
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                text: aiResponse,
+                userData: userData || {}
+            })
+        };
         
     } catch (error) {
-        console.error('❌ Error en endpoint serverless:', error);
-        return res.status(500).json({ 
-            error: 'Error interno del servidor',
-            message: error.message 
-        });
+        console.error('❌ Error en función serverless:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ 
+                error: 'Error interno del servidor',
+                message: error.message 
+            })
+        };
     }
-}
+};
