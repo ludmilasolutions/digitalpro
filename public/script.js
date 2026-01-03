@@ -1,4 +1,4 @@
-// script.js - VERSIÓN COMPLETA CORREGIDA
+// script.js - VERSIÓN CORREGIDA
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Sistema cargado correctamente');
     
