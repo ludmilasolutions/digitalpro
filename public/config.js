@@ -1,35 +1,31 @@
-// config.js - Configuración editable para Netlify
+// config.js - Configuración para Netlify
 const CONFIG = {
-    // IMPORTANTE: Para Netlify, siempre usar serverless endpoint
+    // Siempre usar serverless endpoint en Netlify
     USE_SERVERLESS_ENDPOINT: true,
     
-    // Ruta relativa a la función serverless de Netlify
+    // Ruta ABSOLUTA a la función (importante para Netlify)
     SERVERLESS_ENDPOINT: "/.netlify/functions/gemini",
     
-    // Número de WhatsApp (Argentina: 54 + código de área + número, sin + ni espacios)
-    WHATSAPP_PHONE: "5493417558966", // Reemplazá con tu número
+    // Número de WhatsApp
+    WHATSAPP_PHONE: "5493417558966",
     
-    // Configuración de precios (editables)
+    // Precios
     PRICES: {
         WEB_CATALOG: "desde $150.000",
-        WHATSAPP_BOT: "desde $80.000 + $20.000/mes",
+        WHATSAPP_BOT: "desde $80.000 + $15.000/mes",
         MARKETING_MONTHLY: "desde $45.000 por mes",
         ADS_MANAGEMENT: "desde $30.000 + inversión en anuncios",
-        AUTOMATION_CUSTOM: "se cotizan según necesidad (desde $120.000)",
+        AUTOMATION_CUSTOM: "desde $120.000",
         QUOTES_AUTOMATIC: "desde $60.000"
     },
     
-    // Nombre del negocio (se usa en el footer y títulos)
-    BUSINESS_NAME: "Soluciones Digitales para Negocios Locales",
-    
-    // Configuración del chat (opcional)
+    // Chat config
     CHAT: {
-        INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇",
-        TYPING_DELAY: 1000,
-        MAX_HISTORY: 20
+        INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital IA. <strong>Contame sobre tu negocio</strong> y te ayudo con soluciones 👇",
+        MAX_HISTORY: 15
     }
 };
 
-// Hacer config disponible globalmente
+// Exportar globalmente
 window.CONFIG = CONFIG;
-console.log('✅ Config.js cargado correctamente', CONFIG);
+console.log('✅ Config.js cargado:', CONFIG.SERVERLESS_ENDPOINT);
