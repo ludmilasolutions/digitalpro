@@ -1,4 +1,4 @@
-/* ===== RESET Y ESTILOS BASE ===== */
+/* ===== RESET ===== */
 * {
     margin: 0;
     padding: 0;
@@ -9,8 +9,7 @@ body {
     font-family: 'Open Sans', sans-serif;
     line-height: 1.6;
     color: #333;
-    background-color: #fff;
-    overflow-x: hidden;
+    background: #fff;
 }
 
 .container {
@@ -19,7 +18,7 @@ body {
     padding: 0 20px;
 }
 
-/* ===== HEADER Y LOGO ===== */
+/* ===== HEADER ===== */
 .main-header {
     background: white;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
@@ -37,46 +36,35 @@ body {
     align-items: center;
 }
 
-/* Logo responsive */
 .logo-container {
     display: flex;
     align-items: center;
     gap: 10px;
     text-decoration: none;
-    height: 45px;
 }
 
 .logo-img {
-    height: 100%;
-    max-height: 40px;
-    min-height: 30px;
+    height: 45px;
     width: auto;
-    object-fit: contain;
 }
 
 .logo-text {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    line-height: 1.2;
 }
 
 .logo-main {
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 18px;
     color: #6675FF;
-    white-space: nowrap;
 }
 
 .logo-sub {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     color: #666;
-    white-space: nowrap;
 }
 
-/* Navegación */
 .main-nav {
     display: flex;
     gap: 20px;
@@ -89,7 +77,6 @@ body {
     font-weight: 500;
     font-size: 14px;
     transition: color 0.3s;
-    white-space: nowrap;
 }
 
 .main-nav a:hover {
@@ -102,12 +89,6 @@ body {
     padding: 8px 16px;
     border-radius: 6px;
     font-weight: 600 !important;
-    font-size: 14px !important;
-}
-
-.nav-cta:hover {
-    background: #1da851;
-    color: white !important;
 }
 
 .mobile-menu-btn {
@@ -117,10 +98,9 @@ body {
     font-size: 24px;
     color: #6675FF;
     cursor: pointer;
-    padding: 5px;
 }
 
-/* ===== CHAT WIDGET ===== */
+/* ===== CHAT ===== */
 .chat-widget {
     position: fixed;
     bottom: 20px;
@@ -153,20 +133,15 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    flex-shrink: 0;
 }
 
 .chat-info {
     flex: 1;
-    min-width: 0;
 }
 
 .chat-info h4 {
     margin: 0;
     font-size: 16px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .status {
@@ -178,12 +153,10 @@ body {
 }
 
 .status-dot {
-    display: inline-block;
     width: 8px;
     height: 8px;
     background: #25D366;
     border-radius: 50%;
-    flex-shrink: 0;
 }
 
 .chat-toggle {
@@ -192,13 +165,6 @@ body {
     color: white;
     cursor: pointer;
     font-size: 16px;
-    padding: 5px;
-    flex-shrink: 0;
-    transition: transform 0.3s ease;
-}
-
-.chat-toggle:hover {
-    transform: scale(1.1);
 }
 
 .chat-body {
@@ -215,7 +181,6 @@ body {
     padding: 15px;
     max-height: 300px;
     overflow-y: auto;
-    min-height: 100px;
 }
 
 .message {
@@ -247,8 +212,6 @@ body {
     position: absolute;
     left: -8px;
     top: 15px;
-    width: 0;
-    height: 0;
     border-top: 8px solid transparent;
     border-bottom: 8px solid transparent;
     border-right: 8px solid #6675FF;
@@ -265,11 +228,23 @@ body {
     position: absolute;
     right: -8px;
     top: 15px;
-    width: 0;
-    height: 0;
     border-top: 8px solid transparent;
     border-bottom: 8px solid transparent;
     border-left: 8px solid #f0f2f5;
+}
+
+.message.typing .message-content {
+    background: #e9ecef !important;
+    color: #666 !important;
+}
+
+.message.typing .fa-ellipsis-h {
+    animation: typing 1.5s infinite;
+}
+
+@keyframes typing {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
 }
 
 .chat-input-area {
@@ -277,8 +252,6 @@ body {
     border-top: 1px solid #eee;
     display: flex;
     gap: 10px;
-    align-items: flex-end;
-    background: white;
 }
 
 .chat-input-area textarea {
@@ -291,13 +264,6 @@ body {
     font-size: 14px;
     min-height: 40px;
     max-height: 120px;
-    overflow-y: auto;
-    transition: border-color 0.3s;
-}
-
-.chat-input-area textarea:focus {
-    outline: none;
-    border-color: #6675FF;
 }
 
 .chat-input-area button {
@@ -311,12 +277,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    transition: background 0.3s;
-}
-
-.chat-input-area button:hover {
-    background: #1da851;
 }
 
 .chat-disclaimer {
@@ -328,26 +288,11 @@ body {
     border-top: 1px solid #eee;
 }
 
-/* Estilos para el indicador de typing */
-.message.typing .message-content {
-    background: #e9ecef !important;
-    color: #666 !important;
-}
-
-.message.typing .message-content i {
-    animation: typing 1.5s infinite;
-}
-
-@keyframes typing {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
-}
-
-/* ===== HERO SECTION ===== */
+/* ===== HERO ===== */
 .hero {
     padding: 120px 0 80px;
     background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
-    margin-top: 65px; /* Para compensar el header fixed */
+    margin-top: 65px;
 }
 
 .hero-content {
@@ -358,12 +303,10 @@ body {
 
 .hero-text {
     flex: 1;
-    min-width: 0;
 }
 
 .hero-image {
     flex: 1;
-    min-width: 0;
 }
 
 .hero-image-placeholder {
@@ -380,7 +323,6 @@ body {
 
 .placeholder-content {
     text-align: center;
-    width: 100%;
 }
 
 .placeholder-logo {
@@ -388,9 +330,7 @@ body {
     max-height: 100px;
     width: auto;
     height: auto;
-    object-fit: contain;
-    margin: 0 auto 20px;
-    display: block;
+    margin-bottom: 20px;
     filter: brightness(0) invert(1);
 }
 
@@ -405,10 +345,8 @@ body {
     font-size: 16px;
     max-width: 300px;
     margin: 0 auto;
-    line-height: 1.5;
 }
 
-/* Badge */
 .badge {
     display: inline-block;
     background: #6675FF;
@@ -420,28 +358,30 @@ body {
     margin-bottom: 20px;
 }
 
-/* Títulos */
-h1, h2, h3, h4 {
+h1 {
     font-family: 'Montserrat', sans-serif;
+    font-size: 48px;
     font-weight: 700;
     line-height: 1.2;
+    margin-bottom: 20px;
     color: #333;
 }
 
-h1 {
-    font-size: 48px;
-    margin-bottom: 20px;
-}
-
 h2 {
+    font-family: 'Montserrat', sans-serif;
     font-size: 36px;
-    margin-bottom: 20px;
+    font-weight: 700;
     text-align: center;
+    margin-bottom: 20px;
+    color: #333;
 }
 
 h3 {
+    font-family: 'Montserrat', sans-serif;
     font-size: 24px;
+    font-weight: 700;
     margin-bottom: 15px;
+    color: #333;
 }
 
 .highlight {
@@ -450,13 +390,11 @@ h3 {
 
 .hero-subtitle {
     font-size: 18px;
-    line-height: 1.6;
     color: #666;
     margin-bottom: 30px;
     max-width: 600px;
 }
 
-/* Botones */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -470,7 +408,6 @@ h3 {
     border: none;
     cursor: pointer;
     font-size: 16px;
-    white-space: nowrap;
 }
 
 .btn-primary {
@@ -481,7 +418,6 @@ h3 {
 .btn-primary:hover {
     background: #1da851;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2);
 }
 
 .btn-secondary {
@@ -492,7 +428,6 @@ h3 {
 .btn-secondary:hover {
     background: #5565ee;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 117, 255, 0.2);
 }
 
 .hero-cta {
@@ -523,10 +458,9 @@ h3 {
     font-size: 14px;
 }
 
-/* ===== PROBLEMAS SECTION ===== */
+/* ===== PROBLEMAS ===== */
 .problems {
     padding: 80px 0;
-    background: #fff;
 }
 
 .problems-grid {
@@ -541,12 +475,11 @@ h3 {
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 .problem-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .problem-icon {
@@ -558,7 +491,6 @@ h3 {
 .problem-card h3 {
     font-size: 20px;
     margin-bottom: 15px;
-    color: #333;
 }
 
 .problem-card p {
@@ -566,7 +498,7 @@ h3 {
     line-height: 1.6;
 }
 
-/* ===== SERVICIOS SECTION ===== */
+/* ===== SERVICIOS ===== */
 .services {
     padding: 80px 0;
     background: #f8f9ff;
@@ -581,9 +513,6 @@ h3 {
     color: #666;
     font-size: 18px;
     margin-top: 10px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .services-tabs {
@@ -605,18 +534,12 @@ h3 {
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
-    font-family: 'Open Sans', sans-serif;
 }
 
 .tab-btn.active {
     background: #6675FF;
     color: white;
     border-color: #6675FF;
-}
-
-.tab-btn:hover:not(.active) {
-    border-color: #6675FF;
-    color: #6675FF;
 }
 
 .tab-content {
@@ -639,13 +562,12 @@ h3 {
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease;
     cursor: pointer;
 }
 
 .service-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 .service-icon {
@@ -657,13 +579,12 @@ h3 {
 .service-card h3 {
     font-size: 22px;
     margin-bottom: 15px;
-    color: #333;
 }
 
 .service-card p {
     color: #666;
-    line-height: 1.6;
     margin-bottom: 20px;
+    line-height: 1.6;
 }
 
 .price-tag {
@@ -686,7 +607,7 @@ h3 {
     margin-top: 5px;
 }
 
-/* ===== CUSTOM SOLUTIONS ===== */
+/* ===== CUSTOM ===== */
 .custom-solution {
     background: white;
     padding: 40px;
@@ -706,8 +627,7 @@ h3 {
     color: #666;
     margin-bottom: 30px;
     max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto 30px;
 }
 
 .custom-examples {
@@ -733,25 +653,9 @@ h3 {
     color: #666;
 }
 
-.custom-cta {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-}
-
-.highlight-phrase {
-    font-size: 18px;
-    color: #6675FF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-/* ===== PROCESS SECTION ===== */
+/* ===== PROCESS ===== */
 .process {
     padding: 80px 0;
-    background: white;
 }
 
 .process-steps {
@@ -764,7 +668,6 @@ h3 {
 .step {
     text-align: center;
     padding: 30px;
-    position: relative;
 }
 
 .step-number {
@@ -784,7 +687,6 @@ h3 {
 .step h3 {
     font-size: 20px;
     margin-bottom: 15px;
-    color: #333;
 }
 
 .step p {
@@ -792,51 +694,7 @@ h3 {
     line-height: 1.6;
 }
 
-/* ===== BENEFITS SECTION ===== */
-.benefits {
-    padding: 80px 0;
-    background: #f8f9ff;
-}
-
-.benefits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin-top: 50px;
-}
-
-.benefit-card {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.benefit-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-}
-
-.benefit-card i {
-    font-size: 40px;
-    color: #6675FF;
-    margin-bottom: 20px;
-}
-
-.benefit-card h3 {
-    font-size: 20px;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.benefit-card p {
-    color: #666;
-    line-height: 1.6;
-}
-
-/* ===== FINAL CTA ===== */
+/* ===== CTA ===== */
 .final-cta {
     padding: 80px 0;
     background: #6675FF;
@@ -858,9 +716,6 @@ h3 {
     font-size: 18px;
     margin-bottom: 30px;
     opacity: 0.9;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .btn-whatsapp {
@@ -881,7 +736,6 @@ h3 {
 .btn-whatsapp:hover {
     background: #1da851;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
 }
 
 .cta-text {
@@ -925,15 +779,6 @@ footer {
     gap: 20px;
 }
 
-.footer-logo {
-    display: flex;
-    align-items: center;
-}
-
-.footer-logo .logo-img {
-    max-height: 35px;
-}
-
 .footer-info {
     text-align: right;
     flex: 1;
@@ -954,7 +799,7 @@ footer {
     flex-wrap: wrap;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
     .hero-content {
         gap: 40px;
@@ -968,10 +813,6 @@ footer {
         font-size: 32px;
     }
     
-    .placeholder-title {
-        font-size: 24px;
-    }
-    
     .chat-widget {
         width: 320px;
     }
@@ -980,7 +821,6 @@ footer {
 @media (max-width: 768px) {
     .hero-content {
         flex-direction: column;
-        gap: 40px;
     }
     
     .hero {
@@ -1000,20 +840,6 @@ footer {
         min-height: 300px;
     }
     
-    .placeholder-logo {
-        max-width: 150px;
-        max-height: 75px;
-    }
-    
-    .placeholder-title {
-        font-size: 22px;
-    }
-    
-    .placeholder-subtitle {
-        font-size: 14px;
-    }
-    
-    /* Header responsive */
     .main-nav {
         position: fixed;
         top: 60px;
@@ -1028,7 +854,6 @@ footer {
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease;
-        z-index: 999;
     }
     
     .main-nav.active {
@@ -1049,31 +874,19 @@ footer {
     
     .hero-cta {
         flex-direction: column;
-        align-items: stretch;
     }
     
     .hero-cta .btn {
         width: 100%;
-        justify-content: center;
-    }
-    
-    .hero-stats {
-        flex-direction: column;
-        gap: 20px;
     }
     
     .footer-content {
         flex-direction: column;
         text-align: center;
-        gap: 30px;
     }
     
     .footer-info {
         text-align: center;
-    }
-    
-    .footer-contact {
-        justify-content: center;
     }
 }
 
@@ -1086,34 +899,18 @@ footer {
         font-size: 24px;
     }
     
-    h3 {
-        font-size: 20px;
-    }
-    
-    .hero-subtitle {
-        font-size: 16px;
-    }
-    
     .chat-widget {
         width: calc(100% - 40px);
         right: 20px;
-        bottom: 20px;
-    }
-    
-    .hero-image-placeholder {
-        min-height: 250px;
-        padding: 20px;
     }
     
     .problems-grid,
-    .service-grid,
-    .benefits-grid {
+    .service-grid {
         grid-template-columns: 1fr;
     }
     
     .services-tabs {
         flex-direction: column;
-        align-items: stretch;
     }
     
     .tab-btn {
