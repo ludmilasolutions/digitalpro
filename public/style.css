@@ -141,7 +141,6 @@ body {
     color: white;
     gap: 10px;
     cursor: pointer;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .chat-avatar {
@@ -202,7 +201,6 @@ body {
     transform: scale(1.1);
 }
 
-/* ESTILO CORREGIDO PARA EL CHAT BODY */
 .chat-body {
     max-height: 400px;
     transition: max-height 0.3s ease;
@@ -260,7 +258,6 @@ body {
     background: #f0f2f5;
     color: #333;
     margin-left: auto;
-    margin-right: 0;
 }
 
 .message.user .message-content::before {
@@ -273,21 +270,6 @@ body {
     border-top: 8px solid transparent;
     border-bottom: 8px solid transparent;
     border-left: 8px solid #f0f2f5;
-    left: auto;
-}
-
-.typing .message-content {
-    background: #e9ecef !important;
-    color: #666 !important;
-}
-
-.typing .message-content i {
-    animation: typing 1.5s infinite;
-}
-
-@keyframes typing {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
 }
 
 .chat-input-area {
@@ -344,6 +326,21 @@ body {
     color: #666;
     text-align: center;
     border-top: 1px solid #eee;
+}
+
+/* Estilos para el indicador de typing */
+.message.typing .message-content {
+    background: #e9ecef !important;
+    color: #666 !important;
+}
+
+.message.typing .message-content i {
+    animation: typing 1.5s infinite;
+}
+
+@keyframes typing {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
 }
 
 /* ===== HERO SECTION ===== */
@@ -689,35 +686,6 @@ h3 {
     margin-top: 5px;
 }
 
-.service-detail {
-    text-align: left;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-.service-detail h4 {
-    font-size: 18px;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.service-detail ul {
-    padding-left: 20px;
-    margin-bottom: 15px;
-}
-
-.service-detail li {
-    margin-bottom: 5px;
-    color: #666;
-}
-
-.service-detail em {
-    font-style: italic;
-    color: #666;
-    font-size: 14px;
-}
-
 /* ===== CUSTOM SOLUTIONS ===== */
 .custom-solution {
     background: white;
@@ -986,33 +954,6 @@ footer {
     flex-wrap: wrap;
 }
 
-/* Botón de WhatsApp en mensajes */
-.whatsapp-action-btn {
-    margin-top: 15px !important;
-    padding: 12px 20px !important;
-    background: #25D366 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    font-weight: 600 !important;
-    font-family: 'Open Sans', sans-serif !important;
-    font-size: 14px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    transition: all 0.3s ease !important;
-    width: 100% !important;
-    text-decoration: none !important;
-}
-
-.whatsapp-action-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3) !important;
-    background: #1da851 !important;
-}
-
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1024px) {
     .hero-content {
@@ -1134,22 +1075,6 @@ footer {
     .footer-contact {
         justify-content: center;
     }
-    
-    .logo-container {
-        height: 40px;
-    }
-    
-    .logo-img {
-        max-height: 35px;
-    }
-    
-    .logo-main {
-        font-size: 14px;
-    }
-    
-    .logo-sub {
-        font-size: 10px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -1180,15 +1105,6 @@ footer {
         padding: 20px;
     }
     
-    .placeholder-logo {
-        max-width: 120px;
-        max-height: 60px;
-    }
-    
-    .placeholder-title {
-        font-size: 20px;
-    }
-    
     .problems-grid,
     .service-grid,
     .benefits-grid {
@@ -1202,52 +1118,5 @@ footer {
     
     .tab-btn {
         justify-content: center;
-    }
-    
-    .logo-text {
-        display: none; /* Ocultar texto en móvil muy pequeño */
-    }
-    
-    .logo-container {
-        gap: 0;
-    }
-    
-    .custom-examples ul {
-        grid-template-columns: 1fr;
-    }
-    
-    .btn {
-        padding: 12px 20px;
-        font-size: 14px;
-    }
-    
-    .btn-whatsapp {
-        padding: 15px 20px;
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 360px) {
-    .chat-widget {
-        width: calc(100% - 20px);
-        right: 10px;
-        bottom: 10px;
-    }
-    
-    .hero {
-        padding: 80px 0 40px;
-    }
-    
-    .hero-cta {
-        gap: 10px;
-    }
-    
-    .services-tabs {
-        gap: 5px;
-    }
-    
-    .tab-btn {
-        padding: 10px 15px;
-        font-size: 14px;
     }
 }
