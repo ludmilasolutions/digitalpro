@@ -1,13 +1,18 @@
-// netlify/functions/gemini.js - VERSIÓN CORREGIDA Y SIMPLIFICADA
+// netlify/functions/gemini.js
 exports.handler = async (event) => {
-  // Configurar CORS
+  const allowedOrigins = [
+    'https://digitalrosario.netlify.app',
+    'http://localhost:8888',
+    'http://localhost:3000'
+  ];
+
+  const origin = event.headers.origin || event.headers.Origin;
   const headers = {
-    'Access-Control-Allow-Origin': '*', // Temporalmente permitir todo para pruebas
+    'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : 'https://digitalrosario.netlify.app',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Manejar preflight OPTIONS
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
@@ -21,20 +26,27 @@ exports.handler = async (event) => {
   }
 
   try {
-    // 1. Verificar API Key
+    if (!origin || !allowedOrigins.includes(origin)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({ error: 'Origen no autorizado' })
+      };
+    }
+
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
-      console.error('❌ API Key no configurada en Netlify');
+      console.error('❌ API Key no configurada');
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'Configura GEMINI_API_KEY en Netlify Dashboard > Environment Variables'
+          error: 'Error de configuración del servidor',
+          tip: 'Configura GEMINI_API_KEY en Netlify'
         })
       };
     }
 
-    // 2. Parsear cuerpo
     let body;
     try {
       body = JSON.parse(event.body);
@@ -42,13 +54,12 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'JSON inválido' })
+        body: JSON.stringify({ error: 'Cuerpo JSON inválido' })
       };
     }
 
     const { messages } = body;
     
-    // 3. Validar mensajes
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return {
         statusCode: 400,
@@ -57,17 +68,15 @@ exports.handler = async (event) => {
       };
     }
 
-    console.log('📤 Mensajes recibidos:', JSON.stringify(messages, null, 2));
-
-    // 4. Formatear para Gemini API (ESTRUCTURA CORRECTA)
-    const contents = messages.map(msg => {
+    const formattedMessages = messages.map(msg => {
       return {
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       };
     });
 
-    // 5. Llamar a Gemini API
+    console.log('📤 Enviando a Gemini:', formattedMessages.length, 'mensajes');
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
       {
@@ -76,42 +85,54 @@ exports.handler = async (event) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: contents,
+          contents: formattedMessages,
           generationConfig: {
             temperature: 0.7,
+            topP: 0.8,
+            topK: 40,
             maxOutputTokens: 800,
-          }
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_NONE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_NONE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_NONE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_NONE"
+            }
+          ]
         })
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error Gemini API:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText
-      });
+      console.error('❌ Error Gemini API:', response.status, errorText);
       
       return {
         statusCode: response.status,
         headers,
         body: JSON.stringify({ 
-          error: `Error ${response.status} de Gemini API`,
-          detail: errorText.substring(0, 200)
+          error: `Error de la API (${response.status})`,
+          detail: errorText.substring(0, 300)
         })
       };
     }
 
     const data = await response.json();
-    console.log('✅ Respuesta Gemini:', JSON.stringify(data, null, 2));
-
-    // 6. Extraer texto de respuesta
-    let aiText = 'Disculpá, no pude generar una respuesta en este momento.';
+    console.log('✅ Respuesta Gemini recibida');
     
-    if (data.candidates && data.candidates[0]) {
-      aiText = data.candidates[0].content?.parts?.[0]?.text || aiText;
-    }
+    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                   'Disculpá, no pude generar una respuesta en este momento. Intenta reformular tu pregunta.';
 
     return {
       statusCode: 200,
@@ -123,13 +144,14 @@ exports.handler = async (event) => {
     };
 
   } catch (error) {
-    console.error('🔥 Error en función gemini:', error);
+    console.error('🔥 Error en función:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
         error: 'Error interno del servidor',
-        message: error.message
+        message: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       })
     };
   }
