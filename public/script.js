@@ -1,63 +1,89 @@
-// script.js - Chat IA funcional
+// script.js - Lógica principal del sitio y chat IA
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Sistema cargado correctamente');
     
-    // ===== ELEMENTOS DOM =====
+    // ===== ELEMENTOS DEL DOM =====
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
     const chatToggle = document.getElementById('chatToggle');
     const chatBody = document.getElementById('chatBody');
     
+    // ===== VARIABLES DE ESTADO =====
+    let conversationHistory = [];
+    let isProcessing = false;
+    
     // ===== CONFIGURACIÓN =====
     const CONFIG = window.CONFIG || {
+        USE_SERVERLESS_ENDPOINT: true,
         SERVERLESS_ENDPOINT: "/.netlify/functions/gemini",
-        WHATSAPP_PHONE: "5493417558966"
+        WHATSAPP_PHONE: "5493417558966",
+        CHAT: {
+            INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇",
+            MAX_HISTORY: 15
+        }
     };
     
     // ===== INICIALIZAR CHAT =====
-    function initChat() {
+    function initializeChat() {
         if (!chatMessages || chatMessages.children.length > 0) return;
         
         const initialMessage = CONFIG.CHAT?.INITIAL_MESSAGE || 
-                             "¡Hola! Soy tu asesor digital. ¿En qué puedo ayudarte?";
+                              "¡Hola! Soy tu asesor digital. Contame sobre tu negocio 👇";
         
         addMessage(initialMessage, 'ai');
+        
+        conversationHistory = [{
+            role: 'assistant',
+            content: initialMessage
+        }];
     }
     
-    initChat();
+    // Llamar inicialización
+    initializeChat();
     
-    // ===== FUNCIONES BÁSICAS =====
+    // ===== FUNCIONES DEL CHAT =====
     
-    // Agregar mensaje al chat
+    // 1. Agregar mensaje al chat
     function addMessage(text, sender = 'ai') {
         if (!chatMessages) return;
         
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${sender}`;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
-        // Formatear texto para HTML seguro
-        const safeText = text
+        // Formatear texto (seguro para HTML)
+        const formattedText = text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/\n/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         
-        contentDiv.innerHTML = `<p>${safeText}</p>`;
-        msgDiv.appendChild(contentDiv);
-        chatMessages.appendChild(msgDiv);
+        contentDiv.innerHTML = `<p>${formattedText}</p>`;
+        messageDiv.appendChild(contentDiv);
+        chatMessages.appendChild(messageDiv);
         
         // Scroll al final
         setTimeout(() => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 50);
+        }, 100);
+        
+        // Agregar al historial
+        conversationHistory.push({
+            role: sender === 'user' ? 'user' : 'assistant',
+            content: text
+        });
+        
+        // Limitar historial
+        if (conversationHistory.length > CONFIG.CHAT?.MAX_HISTORY || 15) {
+            conversationHistory = conversationHistory.slice(-(CONFIG.CHAT?.MAX_HISTORY || 15));
+        }
     }
     
-    // Toggle chat
+    // 2. Toggle del chat
     if (chatToggle && chatBody) {
         chatToggle.addEventListener('click', function() {
             chatBody.classList.toggle('collapsed');
@@ -68,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Auto-resize textarea
+    // 3. Auto-resize del textarea
     if (userInput) {
         userInput.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -78,22 +104,25 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage();
+                handleSendMessage();
             }
         });
     }
     
-    // Botón enviar
+    // 4. Botón de enviar
     if (sendButton) {
-        sendButton.addEventListener('click', sendMessage);
+        sendButton.addEventListener('click', handleSendMessage);
     }
     
-    // ===== LÓGICA PRINCIPAL =====
-    async function sendMessage() {
-        if (!userInput || !chatMessages) return;
+    // 5. Función principal para enviar mensaje
+    async function handleSendMessage() {
+        if (!userInput || !chatMessages || isProcessing) return;
         
         const message = userInput.value.trim();
         if (!message) return;
+        
+        // Bloquear mientras procesamos
+        isProcessing = true;
         
         // Agregar mensaje del usuario
         addMessage(message, 'user');
@@ -102,25 +131,25 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.value = '';
         userInput.style.height = 'auto';
         
-        // Mostrar "escribiendo..."
-        showTypingIndicator();
+        // Mostrar "escribiendo"
+        const typingIndicator = showTypingIndicator();
         
         try {
             // Llamar a la IA
-            const response = await callGeminiAPI(message);
+            const aiResponse = await callGeminiAPI();
             
-            // Quitar indicador
-            removeTypingIndicator();
+            // Remover indicador
+            removeTypingIndicator(typingIndicator);
             
             // Agregar respuesta
-            addMessage(response, 'ai');
+            addMessage(aiResponse, 'ai');
             
         } catch (error) {
-            console.error('Error:', error);
-            removeTypingIndicator();
+            console.error('Error en handleSendMessage:', error);
+            removeTypingIndicator(typingIndicator);
             
             // Respuesta de fallback
-            addMessage(`¡Hola! Hubo un problema técnico temporal.
+            addMessage(`¡Hola! Parece que hay un problema técnico temporal. 
 
 Te sugiero:
 
@@ -132,13 +161,14 @@ Te sugiero:
 💡 **O intentá de nuevo en un momento.**
 
 Disculpá las molestias. 😊`, 'ai');
+        } finally {
+            isProcessing = false;
         }
     }
     
-    // Indicador de "escribiendo"
+    // 6. Mostrar indicador de "escribiendo"
     function showTypingIndicator() {
         const typingDiv = document.createElement('div');
-        typingDiv.id = 'typingIndicator';
         typingDiv.className = 'message ai typing';
         typingDiv.innerHTML = `
             <div class="message-content">
@@ -147,30 +177,37 @@ Disculpá las molestias. 😊`, 'ai');
         `;
         chatMessages.appendChild(typingDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        return typingDiv;
     }
     
-    function removeTypingIndicator() {
-        const typing = document.getElementById('typingIndicator');
-        if (typing && typing.parentNode === chatMessages) {
-            chatMessages.removeChild(typing);
+    // 7. Remover indicador
+    function removeTypingIndicator(typingElement) {
+        if (typingElement && typingElement.parentNode === chatMessages) {
+            chatMessages.removeChild(typingElement);
         }
     }
     
     // ===== CONEXIÓN CON GEMINI API =====
-    async function callGeminiAPI(userMessage) {
+    async function callGeminiAPI() {
         try {
-            console.log('🔗 Conectando con Gemini...');
+            console.log('🔗 Llamando a Gemini API...');
             
-            // Endpoint de Netlify Functions
-            const endpoint = CONFIG.SERVERLESS_ENDPOINT;
-            console.log('🌐 Endpoint:', endpoint);
+            // Determinar endpoint
+            let endpoint;
+            if (CONFIG.USE_SERVERLESS_ENDPOINT && CONFIG.SERVERLESS_ENDPOINT) {
+                endpoint = CONFIG.SERVERLESS_ENDPOINT;
+            } else {
+                throw new Error('Endpoint no configurado');
+            }
             
-            // Datos simples para enviar
+            console.log(`🌐 Endpoint: ${endpoint}`);
+            
+            // Preparar datos para enviar
             const requestData = {
-                message: userMessage
+                messages: conversationHistory
             };
             
-            console.log('📤 Enviando:', requestData);
+            console.log('📤 Enviando historial de conversación:', requestData);
             
             // Hacer la petición
             const response = await fetch(endpoint, {
@@ -181,110 +218,155 @@ Disculpá las molestias. 😊`, 'ai');
                 body: JSON.stringify(requestData)
             });
             
-            console.log('📥 Status:', response.status);
+            console.log(`📥 Respuesta status: ${response.status}`);
             
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Error ${response.status}: ${errorData.error || 'Error desconocido'}`);
+                let errorDetail;
+                try {
+                    const errorData = await response.json();
+                    errorDetail = errorData.error || errorData.detail || 'Error desconocido';
+                    console.error('❌ Error detallado:', errorData);
+                } catch (e) {
+                    errorDetail = await response.text();
+                }
+                
+                throw new Error(`Error ${response.status}: ${errorDetail}`);
             }
             
             const data = await response.json();
-            console.log('✅ Respuesta recibida');
+            console.log('✅ Respuesta recibida:', data);
             
-            return data.text || '¡Hola! ¿En qué puedo ayudarte?';
+            if (!data.text) {
+                throw new Error('La respuesta no contiene texto');
+            }
+            
+            return data.text;
             
         } catch (error) {
-            console.error('🔥 Error en API:', error);
+            console.error('🔥 Error en callGeminiAPI:', error);
             
-            // Respuesta local inteligente como backup
-            return generateLocalResponse(userMessage);
+            // Respuesta de fallback local
+            return generateFallbackResponse();
         }
     }
     
-    // Generar respuesta local si falla la IA
-    function generateLocalResponse(userMessage) {
-        const msg = userMessage.toLowerCase();
+    // 8. Generar respuesta de fallback local
+    function generateFallbackResponse() {
+        const lastUserMessage = conversationHistory
+            .filter(msg => msg.role === 'user')
+            .pop()?.content || '';
         
-        if (msg.includes('hola') || msg.includes('buenas')) {
-            return `¡Hola! 😊 Soy tu asesor digital para negocios locales. ¿Me contás qué tipo de negocio tenés?`;
+        const lowerMsg = lastUserMessage.toLowerCase();
+        
+        if (lowerMsg.includes('hola') || lowerMsg.includes('buenas')) {
+            return `¡Hola! 😊 Soy tu asesor digital para negocios locales. ¿Me podés contar qué tipo de negocio tenés?`;
         }
         
-        if (msg.includes('precio') || msg.includes('cuesta') || msg.includes('cuánto')) {
-            return `Te cuento nuestros precios:
+        if (lowerMsg.includes('precio') || lowerMsg.includes('cuesta') || lowerMsg.includes('cuánto')) {
+            return `Te cuento nuestros precios estimativos:
 
 🌐 **Web catálogo:** Desde $150.000
 🤖 **Bot de WhatsApp:** Desde $80.000 + $15.000/mes
 📱 **Marketing digital:** Desde $45.000/mes
-🎯 **Publicidad:** Desde $30.000 + inversión
+🎯 **Publicidad:** Desde $30.000 + inversión en anuncios
 📊 **Presupuestos automáticos:** Desde $60.000
-⚙️ **Automatizaciones:** Desde $120.000
+⚙️ **Automatizaciones a medida:** Desde $120.000
 
-¿Te interesa alguna en particular?`;
+¿Te interesa alguna solución en particular?`;
         }
         
-        if (msg.includes('web') || msg.includes('página') || msg.includes('sitio')) {
-            return `¡La web catálogo es perfecta para comercios!
+        if (lowerMsg.includes('web') || lowerMsg.includes('página') || lowerMsg.includes('sitio')) {
+            return `¡La web catálogo es ideal para comercios!
 
-**Incluye:**
-• Diseño profesional
-• Catálogo de productos
-• Contacto directo
+**¿Qué incluye?**
+• Diseño profesional adaptado a tu negocio
+• Catálogo de productos/servicios
+• Información de contacto visible
 • Optimizada para celulares
 • Integración con WhatsApp
 
-**Precio:** Desde $150.000 (única vez)
+**Inversión:** Desde $150.000 (única vez)
 
 ¿Te gustaría ver ejemplos?`;
         }
         
-        if (msg.includes('bot') || msg.includes('whatsapp') || msg.includes('automático')) {
-            return `El **Bot de WhatsApp** atiende automáticamente:
+        if (lowerMsg.includes('bot') || lowerMsg.includes('whatsapp') || lowerMsg.includes('automático')) {
+            return `El **Bot de WhatsApp** es nuestro servicio más solicitado:
 
-✅ Responde consultas 24/7
-✅ Envía presupuestos al instante
-✅ Toma pedidos automáticamente
-✅ Deriva a humano si es necesario
+**Beneficios:**
+• Atiende consultas **24/7 sin tu intervención**
+• Envía presupuestos **automáticamente**
+• Responde preguntas frecuentes
+• Toma datos para seguimiento
+• Deriva a humano cuando es necesario
 
-**Inversión:**
-• Desarrollo: $80.000
-• Mensualidad: $15.000/mes
+**Inversión:** 
+• Desarrollo: Desde $80.000
+• Mensualidad: $15.000/mes (mantenimiento y actualizaciones)
 
-¡Es nuestro servicio más solicitado!`;
+¿Te sirve para tu negocio?`;
+        }
+        
+        if (lowerMsg.includes('whatsapp') || lowerMsg.includes('contacto') || lowerMsg.includes('hablar')) {
+            return `¡Perfecto! Para una atención más personalizada y confirmar precios exactos, te recomiendo continuar por WhatsApp.
+
+Allí podés:
+• Consultar precios específicos para tu negocio
+• Ver ejemplos reales de trabajos
+• Coordinar una reunión virtual
+• Resolver todas tus dudas
+
+¿Te preparo un resumen con todo lo que hablamos para continuar por WhatsApp?`;
         }
         
         // Respuesta por defecto
-        return `Entiendo. Para ayudarte mejor:
+        return `Entiendo. Para ayudarte mejor, contame:
 
-1. **¿Qué tipo de negocio tenés?**
-2. **¿Qué desafíos tenés?** (tiempo, ventas, visibilidad)
-3. **¿Te interesa alguna solución específica?**
+1. **¿Qué tipo de negocio tenés?** (ferretería, comercio, taller, etc.)
+2. **¿Cuál es tu principal desafío?**
+   - No tengo tiempo para atender consultas
+   - Quiero vender más pero no sé cómo
+   - No soy visible en redes/internet
+   - Mis procesos son muy manuales/lentos
+3. **¿Tenés preferencia por alguna solución?**
+   - Web catálogo
+   - Bot de WhatsApp
+   - Marketing en redes
+   - Publicidad digital
 
-¡Así te puedo asesorar mejor! 😊`;
+¡Así te puedo dar recomendaciones específicas para tu caso! 😊`;
     }
     
-    // ===== FUNCIONALIDADES EXTRA =====
+    // ===== FUNCIONALIDADES ADICIONALES =====
     
     // Menú móvil
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const mainNav = document.querySelector('.main-nav');
     
     if (mobileMenuBtn && mainNav) {
-        mobileMenuBtn.addEventListener('click', () => {
+        mobileMenuBtn.addEventListener('click', function() {
             mainNav.classList.toggle('active');
+        });
+        
+        // Cerrar menú al hacer clic en enlaces
+        document.querySelectorAll('.main-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('active');
+            });
         });
     }
     
     // Tabs de servicios
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tabId = this.dataset.tab;
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
             
-            // Quitar active de todos
-            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => {
-                el.classList.remove('active');
-            });
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
             
-            // Agregar active a seleccionados
             this.classList.add('active');
             const targetTab = document.getElementById(tabId);
             if (targetTab) targetTab.classList.add('active');
@@ -295,28 +377,53 @@ Disculpá las molestias. 😊`, 'ai');
     document.querySelectorAll('.service-card').forEach(card => {
         card.addEventListener('click', function() {
             const title = this.querySelector('h3')?.textContent || '';
-            let message = '';
             
-            if (title.includes('Bot')) message = 'Me interesa el Bot de WhatsApp';
-            else if (title.includes('Web')) message = 'Quiero saber sobre la web catálogo';
-            else if (title.includes('redes')) message = 'Me interesa el manejo de redes';
-            else if (title.includes('Publicidad')) message = 'Quiero info sobre publicidad';
-            else if (title.includes('Presupuestos')) message = 'Me interesan los presupuestos automáticos';
-            else message = `Me interesa ${title}`;
+            let message = '';
+            if (title.includes('Bot de WhatsApp')) {
+                message = 'Me interesa el Bot de WhatsApp. ¿Cómo funciona?';
+            } else if (title.includes('Web catálogo')) {
+                message = 'Quiero saber más sobre la Web catálogo.';
+            } else if (title.includes('redes sociales')) {
+                message = 'Me gustaría consultar sobre manejo de redes sociales.';
+            } else if (title.includes('Publicidad')) {
+                message = 'Quiero información sobre publicidad digital.';
+            } else if (title.includes('Presupuestos')) {
+                message = 'Me interesan los presupuestos automáticos con IA.';
+            } else {
+                message = `Me interesa ${title}. ¿Podrían darme más información?`;
+            }
             
             if (userInput) {
                 userInput.value = message;
-                userInput.focus();
                 userInput.dispatchEvent(new Event('input'));
+                userInput.focus();
                 
                 // Abrir chat si está cerrado
                 if (chatBody && chatBody.classList.contains('collapsed')) {
                     chatBody.classList.remove('collapsed');
-                    chatToggle.querySelector('i').className = 'fas fa-chevron-down';
+                    if (chatToggle) {
+                        chatToggle.querySelector('i').className = 'fas fa-chevron-down';
+                    }
                 }
+                
+                // Desplazar al chat
+                document.querySelector('.chat-widget').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
             }
         });
     });
     
-    console.log('✅ Sistema listo para usar');
+    // Actualizar botones de WhatsApp con número real
+    const whatsappButtons = document.querySelectorAll('[id*="whatsapp"], .btn-whatsapp, .nav-cta');
+    whatsappButtons.forEach(btn => {
+        const href = btn.getAttribute('href');
+        if (href && href.includes('wa.me')) {
+            const newHref = href.replace(/wa\.me\/\d+/, `wa.me/${CONFIG.WHATSAPP_PHONE}`);
+            btn.setAttribute('href', newHref);
+        }
+    });
+    
+    console.log('✅ Sistema completamente inicializado');
 });
