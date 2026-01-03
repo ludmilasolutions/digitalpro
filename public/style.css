@@ -120,7 +120,7 @@ body {
     padding: 5px;
 }
 
-/* ===== CHAT WIDGET - COMPLETAMENTE CORREGIDO ===== */
+/* ===== CHAT WIDGET ===== */
 .chat-widget {
     position: fixed;
     bottom: 20px;
@@ -236,11 +236,58 @@ body {
     border-radius: 10px;
     max-width: 85%;
     word-wrap: break-word;
+    position: relative;
 }
 
 .message.ai .message-content {
     background: #6675FF;
     color: white;
+}
+
+.message.ai .message-content::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 15px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid #6675FF;
+}
+
+.message.user .message-content {
+    background: #f0f2f5;
+    color: #333;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.message.user .message-content::before {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 15px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid #f0f2f5;
+    left: auto;
+}
+
+.typing .message-content {
+    background: #e9ecef !important;
+    color: #666 !important;
+}
+
+.typing .message-content i {
+    animation: typing 1.5s infinite;
+}
+
+@keyframes typing {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
 }
 
 .chat-input-area {
@@ -596,6 +643,7 @@ h3 {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
 }
 
 .service-card:hover {
@@ -936,6 +984,33 @@ footer {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+}
+
+/* Botón de WhatsApp en mensajes */
+.whatsapp-action-btn {
+    margin-top: 15px !important;
+    padding: 12px 20px !important;
+    background: #25D366 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    font-family: 'Open Sans', sans-serif !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    text-decoration: none !important;
+}
+
+.whatsapp-action-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3) !important;
+    background: #1da851 !important;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
