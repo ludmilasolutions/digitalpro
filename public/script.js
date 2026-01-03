@@ -22,15 +22,17 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // ===== CONFIGURACIÓN =====
-    const CONFIG = {
+    // Usar CONFIG de config.js, con valores por defecto si no está disponible
+    const CONFIG = window.CONFIG || {
         CHAT: {
             INITIAL_MESSAGE: '¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇',
-            MAX_HISTORY: 15
+            MAX_HISTORY: 15,
+            ENABLE_AI: true
         },
-        WHATSAPP_PHONE: '5491111111111'
+        WHATSAPP_PHONE: '5493417558966'
     };
     
-    // ===== SISTEMA DE CHAT - MEJORADO =====
+    // ===== SISTEMA DE CHAT =====
     
     // 1. Función para agregar mensaje inicial UNA SOLA VEZ
     function addInitialMessage() {
@@ -59,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Inicializar chat
     addInitialMessage();
     
-    // 3. Toggle del chat - MEJORADO
+    // 3. Toggle del chat
     if (chatToggle && chatBody) {
         chatToggle.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -155,18 +157,86 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Limitar historial
-        if (conversationHistory.length > CONFIG.CHAT.MAX_HISTORY) {
-            conversationHistory = conversationHistory.slice(-CONFIG.CHAT.MAX_HISTORY);
+        if (conversationHistory.length > (CONFIG.CHAT.MAX_HISTORY || 15)) {
+            conversationHistory = conversationHistory.slice(-(CONFIG.CHAT.MAX_HISTORY || 15));
         }
     }
     
-    // 8. Extraer datos del usuario de la conversación - MEJORADO
+    // 8. Función para llamar a la API de Gemini
+    async function callGeminiAPI() {
+        try {
+            console.log('🔗 Conectando con Gemini API...');
+            
+            // Formatear mensajes para Gemini
+            const formattedMessages = conversationHistory.map(msg => {
+                return {
+                    role: msg.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: msg.content }]
+                };
+            });
+
+            // Asegurar que config.js se cargó
+            if (!window.CONFIG) {
+                console.warn('⚠️ CONFIG no está disponible, usando valores por defecto');
+                window.CONFIG = {
+                    USE_SERVERLESS_ENDPOINT: true,
+                    SERVERLESS_ENDPOINT: '/.netlify/functions/gemini'
+                };
+            }
+
+            // Determinar endpoint
+            let endpoint;
+            if (window.CONFIG.USE_SERVERLESS_ENDPOINT) {
+                endpoint = window.CONFIG.SERVERLESS_ENDPOINT;
+                console.log(`🌐 Usando endpoint serverless: ${endpoint}`);
+            } else {
+                throw new Error('Endpoint directo no disponible');
+            }
+
+            // Hacer la petición
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages: formattedMessages
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('❌ Error en respuesta:', errorData);
+                throw new Error(`Error ${response.status}: ${errorData.error || 'Error desconocido'}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Respuesta recibida:', data.text ? 'Texto OK' : 'Sin texto');
+            
+            return data.text || 'Disculpá, no pude generar una respuesta en este momento.';
+
+        } catch (error) {
+            console.error('🔥 Error en callGeminiAPI:', error);
+            
+            // Respuesta de fallback
+            return `Lo siento, hubo un error al conectar con el servidor. 
+    
+    Puedes:
+    1. Intentar nuevamente en un momento
+    2. Contactarnos directamente por WhatsApp
+    3. Recargar la página
+    
+    Error: ${error.message}`;
+        }
+    }
+    
+    // 9. Extraer datos del usuario de la conversación
     function extractUserDataFromMessage(message) {
         const lowerMsg = message.toLowerCase();
         
         console.log('🔍 Analizando mensaje:', lowerMsg);
         
-        // Detectar tipo de negocio (más opciones)
+        // Detectar tipo de negocio
         const businessTypes = [
             { keywords: ['ferretería', 'ferreteria', 'ferretero', 'ferreter'], value: 'Ferretería' },
             { keywords: ['comercio', 'negocio', 'local', 'tienda', 'almacén', 'almacen', 'kiosco', 'kiosko'], value: 'Comercio local' },
@@ -187,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Detectar servicios de interés (más específico)
+        // Detectar servicios de interés
         const services = [
             { 
                 key: 'web', 
@@ -294,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('📊 Datos actuales del usuario:', userData);
     }
     
-    // 9. Generar resumen para WhatsApp - MEJORADO
+    // 10. Generar resumen para WhatsApp
     function generateWhatsAppSummary() {
         const serviceMap = {
             'web': 'Web catálogo',
@@ -327,7 +397,7 @@ Redes a trabajar: ${userData.networks || 'Por definir'}
 Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
     }
     
-    // 10. Función para agregar mensaje con botón de WhatsApp
+    // 11. Función para agregar mensaje con botón de WhatsApp
     function addMessageWithWhatsAppButton(messageText) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message ai';
@@ -412,8 +482,8 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         });
     }
     
-    // 11. Función para enviar mensaje
-    function handleSendMessage() {
+    // 12. Función para enviar mensaje
+    async function handleSendMessage() {
         if (!userInput || !chatMessages) return;
         
         const message = userInput.value.trim();
@@ -432,315 +502,44 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         // Mostrar indicador de "escribiendo"
         const typingIndicator = document.createElement('div');
         typingIndicator.className = 'message ai typing';
-        typingIndicator.innerHTML = '<div class="message-content"><p><i class="fas fa-ellipsis-h"></i> Analizando tu mensaje...</p></div>';
+        typingIndicator.innerHTML = '<div class="message-content"><p><i class="fas fa-ellipsis-h"></i> Pensando respuesta...</p></div>';
         chatMessages.appendChild(typingIndicator);
         scrollToBottom();
         
-        // Generar respuesta después de un delay (simulando procesamiento)
-        setTimeout(() => {
+        try {
+            // Llamar a Gemini API solo si está habilitado
+            let aiResponse;
+            if (CONFIG.CHAT.ENABLE_AI !== false) {
+                aiResponse = await callGeminiAPI();
+            } else {
+                // Respuesta de fallback si la IA está deshabilitada
+                aiResponse = "La función de IA está temporalmente deshabilitada. Por favor, contactanos directamente por WhatsApp para más información.";
+            }
+            
             // Remover indicador
             if (typingIndicator.parentNode === chatMessages) {
                 chatMessages.removeChild(typingIndicator);
             }
             
-            // Generar respuesta basada en el mensaje del usuario
-            getAIResponse(message);
-        }, 1000);
-    }
-    
-    // 12. SISTEMA DE RESPUESTAS INTELIGENTES - COMPLETAMENTE REHECHO
-    function getAIResponse(userMessage) {
-        const lowerMessage = userMessage.toLowerCase();
-        
-        console.log('🤖 Procesando respuesta para:', lowerMessage);
-        
-        // MAPA DE INTENCIONES Y RESPUESTAS
-        const intentResponses = {
-            // Saludos
-            'saludo': {
-                keywords: ['hola', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches', 'hi', 'hello'],
-                response: '¡Hola! 😊 Soy tu asesor digital para negocios locales. ¿Me podés contar qué tipo de negocio tenés?'
-            },
+            // Agregar respuesta de la IA
+            addMessage(aiResponse);
             
-            // Tipo de negocio
-            'negocio': {
-                keywords: ['tengo', 'soy', 'trabajo en', 'mi negocio es', 'ferretería', 'ferreteria', 'comercio', 'tienda', 'taller', 'corralón', 'corralon', 'pyme', 'empresa'],
-                response: `¡Excelente! Trabajamos mucho con ${userData.businessType || 'negocios como el tuyo'}. 
-                
-¿Qué es lo que más te gustaría mejorar? Por ejemplo:
-• Atender más consultas automáticamente
-• Vender más por redes sociales
-• Tener una web con tus productos
-• Automatizar presupuestos
-• Crear contenido profesional
-
-¿Alguna de estas te interesa?`
-            },
-            
-            // Problemas específicos
-            'problema_tiempo': {
-                keywords: ['no tengo tiempo', 'no me da el tiempo', 'estoy muy ocupado', 'mucho trabajo', 'no llego'],
-                response: `¡Te entiendo perfectamente! El tiempo es lo más valioso que tenés.
-
-Con nuestras soluciones podés:
-• **Reducir hasta el 70%** de tareas manuales
-• Atender consultas **automáticamente 24/7**
-• Generar presupuestos **en segundos**
-• Manejar redes sociales **sin dedicar horas**
-
-¿Qué tarea te consume más tiempo actualmente?`
-            },
-            
-            'problema_consultas': {
-                keywords: ['muchos mensajes', 'no respondo', 'whatsapp lleno', 'instagram lleno', 'no atiendo', 'consultas'],
-                response: `¡Es muy común! Muchos negocios pierden ventas por no poder responder a tiempo.
-
-Te propongo un **Bot de WhatsApp** que:
-• Atiende consultas frecuentes **automáticamente**
-• Envía presupuestos **al instante**
-• Deriva consultas complejas a vos
-• Funciona **24/7**, incluso de madrugada
-
-¿Te gustaría saber más sobre cómo funciona?`
-            },
-            
-            'problema_ventas': {
-                keywords: ['no vendo', 'pocas ventas', 'quiero vender más', 'aumentar ventas', 'más clientes'],
-                response: `¡Vamos a solucionarlo! Para vender más necesitás:
-
-1. **Más visibilidad** (redes sociales + publicidad)
-2. **Mejor atención** (respuestas rápidas 24/7)
-3. **Presencia online** (web catálogo accesible)
-4. **Seguimiento automatizado** (no perder oportunidades)
-
-¿Por dónde te gustaría empezar?`
-            },
-            
-            'problema_visible': {
-                keywords: ['no me conocen', 'no soy visible', 'la competencia', 'no aparezco', 'instagram', 'facebook'],
-                response: `La visibilidad es clave hoy en día. Te ayudo con:
-
-📱 **Marketing Digital Completo:**
-• Contenido semanal para redes
-• Imágenes y videos profesionales
-• Estrategia de publicidad
-• Crecimiento orgánico
-
-🌐 **Web Catálogo:**
-• Tus productos online 24/7
-• Diseño profesional
-• Optimizada para celulares
-• Contacto directo
-
-¿Te interesa alguna opción?`
-            },
-            
-            // Servicios específicos
-            'servicio_web': {
-                keywords: ['web', 'página web', 'pagina web', 'sitio web', 'online', 'internet', 'catálogo', 'catalogo'],
-                response: `¡La web catálogo es ideal para negocios locales!
-
-**¿Qué incluye?**
-• Diseño profesional adaptado a tu negocio
-• Catálogo de productos/servicios
-• Información de contacto visible
-• Optimizada para celulares
-• Integración con WhatsApp
-
-**Inversión:** Desde $150.000 (única vez)
-
-**No es una tienda online** - es tu vitrina digital para que los clientes te conozcan y te contacten.
-
-¿Te gustaría ver ejemplos?`
-            },
-            
-            'servicio_bot': {
-                keywords: ['bot', 'whatsapp', 'automático', 'automatico', 'chatbot', 'atención automática'],
-                response: `El **Bot de WhatsApp** es nuestro servicio más solicitado:
-
-**Beneficios:**
-• Atiende consultas **24/7 sin tu intervención**
-• Envía presupuestos **automáticamente**
-• Responde preguntas frecuentes
-• Toma datos para seguimiento
-• Deriva a humano cuando es necesario
-
-**Inversión:** 
-• Desarrollo: Desde $80.000
-• Mensualidad: $15.000/mes (mantenimiento y actualizaciones)
-
-**Ejemplo de uso:**
-Cliente escribe: "¿Tienen tornillos 3x20?"
-Bot responde: "¡Sí! Tenemos tornillos 3x20. ¿Cuántas unidades necesitás? El precio por 100 unidades es $4.500"
-
-¿Te sirve para tu negocio?`
-            },
-            
-            'servicio_marketing': {
-                keywords: ['marketing', 'redes sociales', 'instagram', 'facebook', 'contenido', 'redes'],
-                response: `¡El marketing digital es esencial hoy!
-
-**Nuestro servicio incluye:**
-
-📅 **Primer mes (especial):**
-• 3 imágenes profesionales
-• 1 video promocional
-• Estrategia personalizada
-
-📅 **Meses siguientes (por semana):**
-• 2 videos cortos
-• 4 imágenes
-• Historias diarias
-• Interacción con seguidores
-
-**Inversión:** Desde $45.000 por mes
-
-**Todo basado en:** Tus productos, promociones, novedades y lo que haga único tu negocio.
-
-¿Te gustaría saber más?`
-            },
-            
-            'servicio_publicidad': {
-                keywords: ['publicidad', 'anuncios', 'ads', 'promocionar', 'aparecer primero'],
-                response: `La publicidad digital te pone frente a clientes locales:
-
-**Campañas en:**
-• Instagram y Facebook
-• Google (búsquedas locales)
-• Audiencias específicas
-
-**Inversión:**
-• Nuestro trabajo: Desde $30.000
-• Inversión en anuncios: Vos decidís el presupuesto (recomendamos $10.000-$50.000/mes para empezar)
-
-**Controlamos:**
-• Optimización diaria
-• Segmentación precisa
-• Resultados medibles
-• Ajustes constantes
-
-¿Para qué rubro querés hacer publicidad?`
-            },
-            
-            // Precios y costos
-            'precio': {
-                keywords: ['precio', 'cuesta', 'costo', 'cuánto', 'cuanto', 'valor', 'inversión', 'inversion'],
-                response: `Los precios varían según cada solución:
-
-**Desarrollo único:**
-• Web catálogo: **Desde $150.000**
-• Bot de WhatsApp: **Desde $80.000**
-• Presupuestos automáticos: **Desde $60.000**
-• Automatizaciones: **Desde $120.000** (según complejidad)
-
-**Servicios mensuales:**
-• Bot de WhatsApp: **$15.000/mes**
-• Marketing digital: **Desde $45.000/mes**
-• Publicidad: **Desde $30.000/mes** + inversión en anuncios
-
-**¡Importante!** Los precios son estimativos. El precio final depende de las necesidades específicas de tu negocio y se confirma en la consulta por WhatsApp.
-
-¿Qué servicio te interesa para darte más detalles?`
-            },
-            
-            // WhatsApp y contacto
-            'whatsapp': {
-                keywords: ['whatsapp', 'contacto', 'hablar', 'llamar', 'consultar', 'asesor', 'persona'],
-                response: `¡Claro! Para una atención más personalizada y confirmar precios exactos, te recomiendo continuar por WhatsApp.
-
-Allí podés:
-• Consultar precios específicos para tu negocio
-• Ver ejemplos reales de trabajos
-• Coordinar una reunión virtual
-• Resolver todas tus dudas
-
-¿Te preparo un resumen con todo lo que hablamos para continuar por WhatsApp?`
-            },
-            
-            // Despedidas
-            'despedida': {
-                keywords: ['gracias', 'chau', 'adiós', 'adios', 'bye', 'nos vemos', 'hasta luego'],
-                response: `¡Gracias a vos por consultar! 😊
-
-Recordá que estoy acá para ayudarte con cualquier duda sobre digitalizar tu negocio.
-
-Si querés avanzar con alguna solución, te recomiendo continuar por WhatsApp para atención personalizada.
-
-¡Que tengas un excelente día!`
+        } catch (error) {
+            // Remover indicador
+            if (typingIndicator.parentNode === chatMessages) {
+                chatMessages.removeChild(typingIndicator);
             }
-        };
-        
-        // DETECTAR LA INTENCIÓN PRINCIPAL
-        let detectedIntent = null;
-        let maxMatches = 0;
-        
-        for (const [intent, data] of Object.entries(intentResponses)) {
-            let matches = 0;
-            data.keywords.forEach(keyword => {
-                if (lowerMessage.includes(keyword)) {
-                    matches++;
-                }
-            });
             
-            if (matches > maxMatches) {
-                maxMatches = matches;
-                detectedIntent = intent;
-            }
-        }
-        
-        // GENERAR RESPUESTA BASADA EN LA INTENCIÓN
-        let response = '';
-        
-        if (detectedIntent && maxMatches > 0) {
-            response = intentResponses[detectedIntent].response;
-            console.log(`🎯 Intención detectada: ${detectedIntent} (${maxMatches} coincidencias)`);
-        } else {
-            // RESPUESTA POR DEFECTO (cuando no se detecta intención clara)
-            response = `Entiendo. Para ayudarte mejor, contame:
+            console.error('Error al obtener respuesta:', error);
+            
+            // Respuesta de fallback
+            addMessage(`Hmm, parece que hubo un problema técnico. Te sugiero:
 
-1. **¿Qué tipo de negocio tenés?** (ferretería, comercio, taller, etc.)
-2. **¿Cuál es tu principal desafío?**
-   - No tengo tiempo para atender consultas
-   - Quiero vender más pero no sé cómo
-   - No soy visible en redes/internet
-   - Mis procesos son muy manuales/lentos
-3. **¿Tenés preferencia por alguna solución?**
-   - Web catálogo
-   - Bot de WhatsApp
-   - Marketing en redes
-   - Publicidad digital
-   - Automatizaciones
+1. **Continuar por WhatsApp directo:** Te puedo preparar un resumen de lo que hablamos para que hables con un asesor humano.
+2. **Intentar de nuevo:** A veces es un problema temporal.
 
-¡Así te puedo dar recomendaciones específicas para tu caso! 😊`;
+¿Qué prefieres hacer?`);
         }
-        
-        // DECIDIR SI MOSTRAR BOTÓN DE WHATSAPP
-        const hasBasicInfo = userData.businessType || userData.mainGoal || userData.interestedServices.length > 0;
-        const wantsWhatsApp = lowerMessage.includes('whatsapp') || 
-                             lowerMessage.includes('contacto') || 
-                             lowerMessage.includes('hablar') ||
-                             lowerMessage.includes('asesor') ||
-                             lowerMessage.includes('consultar') ||
-                             detectedIntent === 'whatsapp' ||
-                             detectedIntent === 'precio';
-        
-        const showWhatsAppButton = (hasBasicInfo && wantsWhatsApp) || 
-                                  (userData.interestedServices.length >= 2) ||
-                                  (userData.businessType && userData.mainGoal);
-        
-        console.log(`📊 Decisión WhatsApp: ${showWhatsAppButton ? 'SI' : 'NO'} (Info: ${hasBasicInfo}, Quiere: ${wantsWhatsApp})`);
-        
-        if (showWhatsAppButton) {
-            // Agregar texto adicional si vamos a mostrar el botón
-            if (!response.includes('WhatsApp') && !response.includes('whatsapp')) {
-                response += '\n\n**¿Te gustaría que preparemos un plan personalizado y continuemos por WhatsApp?**';
-            }
-            addMessageWithWhatsAppButton(response);
-        } else {
-            addMessage(response);
-        }
-        
-        scrollToBottom();
     }
     
     // ===== FUNCIONALIDADES DE LA LANDING PAGE =====
