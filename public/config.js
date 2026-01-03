@@ -1,15 +1,15 @@
-// config.js - Configuración editable para Netlify
+// config.js - Configuración para Netlify
 const CONFIG = {
-    // IMPORTANTE: Para Netlify, siempre usar serverless endpoint
+    // IMPORTANTE: Usar siempre serverless endpoint en Netlify
     USE_SERVERLESS_ENDPOINT: true,
     
-    // Ruta relativa a la función serverless de Netlify
+    // Ruta a la función serverless de Netlify
     SERVERLESS_ENDPOINT: "/.netlify/functions/gemini",
     
-    // Número de WhatsApp (Argentina: 54 + código de área + número, sin + ni espacios)
+    // Número de WhatsApp
     WHATSAPP_PHONE: "5493417558966", // Reemplazá con tu número
     
-    // Configuración de precios (editables)
+    // Configuración de precios
     PRICES: {
         WEB_CATALOG: "desde $150.000",
         WHATSAPP_BOT: "desde $80.000 + $20.000/mes",
@@ -19,14 +19,15 @@ const CONFIG = {
         QUOTES_AUTOMATIC: "desde $60.000"
     },
     
-    // Nombre del negocio (se usa en el footer y títulos)
+    // Nombre del negocio
     BUSINESS_NAME: "Soluciones Digitales para Negocios Locales",
     
-    // Configuración del chat (opcional)
+    // Configuración del chat
     CHAT: {
         INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇",
         TYPING_DELAY: 1000,
-        MAX_HISTORY: 20
+        MAX_HISTORY: 20,
+        ENABLE_AI: true // Activar IA real
     }
 };
 
