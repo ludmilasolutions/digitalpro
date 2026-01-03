@@ -14,6 +14,15 @@
     <!-- Favicon & Logo -->
     <link rel="icon" type="image/x-icon" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
+    
+    <style>
+        /* Estilos mínimos para evitar problemas de carga */
+        .logo-img, .placeholder-logo {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
     <!-- Header con Logo -->
@@ -21,7 +30,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="#" class="logo-container">
-                    <img src="logo.png" alt="Soluciones Digitales para Negocios Locales" class="logo-img">
+                    <img src="logo.png" alt="Soluciones Digitales para Negocios Locales" class="logo-img" onerror="this.style.display='none'">
                     <div class="logo-text">
                         <span class="logo-main">Soluciones Digitales</span>
                         <span class="logo-sub">Para Negocios Locales</span>
@@ -36,16 +45,16 @@
                         <i class="fab fa-whatsapp"></i> Consultar Gratis
                     </a>
                 </nav>
-                <button class="mobile-menu-btn">
+                <button class="mobile-menu-btn" aria-label="Menú de navegación">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Chat IA Flotante - CORREGIDO -->
-    <div class="chat-widget">
-        <div class="chat-header">
+    <!-- Chat IA Flotante - SIMPLIFICADO Y CORREGIDO -->
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-header" id="chatHeader">
             <div class="chat-avatar">
                 <i class="fas fa-robot"></i>
             </div>
@@ -53,21 +62,17 @@
                 <h4>Asistente Digital</h4>
                 <p class="status"><span class="status-dot"></span> En línea</p>
             </div>
-            <button class="chat-toggle">
+            <button class="chat-toggle" id="chatToggle" aria-label="Alternar chat">
                 <i class="fas fa-chevron-down"></i>
             </button>
         </div>
-        <div class="chat-body">
+        <div class="chat-body" id="chatBody">
             <div class="chat-messages" id="chatMessages">
-                <div class="message ai">
-                    <div class="message-content">
-                        <p>¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇</p>
-                    </div>
-                </div>
+                <!-- El mensaje se agregará por JavaScript -->
             </div>
             <div class="chat-input-area">
                 <textarea id="userInput" placeholder="Escribí tu mensaje..." rows="1"></textarea>
-                <button id="sendButton">
+                <button id="sendButton" aria-label="Enviar mensaje">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -111,7 +116,7 @@
                 <div class="hero-image">
                     <div class="hero-image-placeholder">
                         <div class="placeholder-content">
-                            <img src="logo.png" alt="Logo Soluciones Digitales" class="placeholder-logo">
+                            <img src="logo.png" alt="Logo Soluciones Digitales" class="placeholder-logo" onerror="this.style.display='none'">
                             <h3 class="placeholder-title">Tu negocio digitalizado</h3>
                             <p class="placeholder-subtitle">Con herramientas diseñadas específicamente para comercios locales</p>
                         </div>
@@ -364,7 +369,8 @@
             <div class="cta-box">
                 <h2>¿Listo para digitalizar tu negocio?</h2>
                 <p class="cta-subtitle">Hablá ahora con nuestro equipo por WhatsApp. Sin compromiso, te asesoramos en minutos.</p>
-                <a href="#" class="btn btn-whatsapp" id="finalWhatsAppBtn">
+                <a href="https://wa.me/5493417558966?text=Hola!%20Vi%20su%20página%20web%20y%20me%20interesa%20conocer%20más%20sobre%20sus%20soluciones%20digitales%20para%20mi%20negocio." 
+                   class="btn btn-whatsapp" id="finalWhatsAppBtn" target="_blank">
                     <i class="fab fa-whatsapp"></i> 
                     <div class="cta-text">
                         <strong>Consultar por WhatsApp</strong>
@@ -384,7 +390,7 @@
             <div class="footer-content">
                 <div class="footer-logo">
                     <div class="logo-container">
-                        <img src="logo.png" alt="Logo Soluciones Digitales" class="logo-img">
+                        <img src="logo.png" alt="Logo Soluciones Digitales" class="logo-img" onerror="this.style.display='none'">
                         <div class="logo-text">
                             <span class="logo-main">Soluciones Digitales</span>
                             <span class="logo-sub">Para Negocios Locales</span>
@@ -392,82 +398,249 @@
                     </div>
                 </div>
                 <div class="footer-info">
-                    <p>© 2024 Soluciones Digitales para Negocios Locales. Hecho en Argentina.</p>
+                    <p>© 2024 Soluciones Digitales. Hecho en Argentina.</p>
                     <p class="footer-contact">
                         <i class="fab fa-whatsapp"></i> Solo contacto por WhatsApp | 
-                        <i class="fas fa-map-marker-alt"></i> Para ferreterías, comercios, talleres, pymes
+                        <i class="fas fa-map-marker-alt"></i> Para todo tipo de negocios.
                     </p>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- JavaScript -->
-    <script src="config.js"></script>
-    <script src="script.js"></script>
-    
-    <!-- Script corregido para el logo y chat -->
+    <!-- JavaScript simplificado y directo -->
     <script>
-        // Toggle del menú móvil
-        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
-            document.querySelector('.main-nav').classList.toggle('active');
-        });
-        
-        // Cerrar menú al hacer clic en un enlace
-        document.querySelectorAll('.main-nav a').forEach(link => {
-            link.addEventListener('click', () => {
-                document.querySelector('.main-nav').classList.remove('active');
-            });
-        });
-        
-        // WhatsApp button functionality
-        document.getElementById('finalWhatsAppBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            // Replace with your WhatsApp number
-            const phoneNumber = '5491111111111'; // Example: Argentina number
-            const message = 'Hola! Vi su página web y me interesa conocer más sobre sus soluciones digitales para mi negocio.';
-            const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappURL, '_blank');
-        });
-        
-        // Chat toggle functionality - CORREGIDO
-        document.querySelector('.chat-toggle').addEventListener('click', function() {
-            const chatBody = document.querySelector('.chat-body');
-            const isCollapsed = chatBody.classList.contains('collapsed');
+        // ===== INICIALIZACIÓN SIMPLIFICADA =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Sitio cargado correctamente');
             
-            // Cambiar clase
-            chatBody.classList.toggle('collapsed');
+            // ===== MENÚ MÓVIL =====
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const mainNav = document.querySelector('.main-nav');
             
-            // Cambiar ícono
-            const icon = this.querySelector('i');
-            if (isCollapsed) {
-                // Si estaba colapsado, mostrar (flecha abajo)
-                icon.classList.remove('fa-chevron-up');
-                icon.classList.add('fa-chevron-down');
-            } else {
-                // Si estaba expandido, colapsar (flecha arriba)
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-up');
+            if (mobileMenuBtn && mainNav) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mainNav.classList.toggle('active');
+                });
+                
+                // Cerrar menú al hacer clic en un enlace
+                document.querySelectorAll('.main-nav a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mainNav.classList.remove('active');
+                    });
+                });
             }
-        });
-        
-        // Auto-resize textarea in chat
-        const userInput = document.getElementById('userInput');
-        if (userInput) {
-            userInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
+            
+            // ===== CHAT SIMPLIFICADO Y CORREGIDO =====
+            const chatToggle = document.getElementById('chatToggle');
+            const chatBody = document.getElementById('chatBody');
+            const chatMessages = document.getElementById('chatMessages');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            // Estado del chat
+            let chatInitialized = false;
+            
+            // Función para agregar mensaje inicial UNA SOLA VEZ
+            function addInitialMessage() {
+                if (!chatInitialized && chatMessages && chatMessages.children.length === 0) {
+                    const initialMessage = document.createElement('div');
+                    initialMessage.className = 'message ai';
+                    initialMessage.innerHTML = `
+                        <div class="message-content">
+                            <p>¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇</p>
+                        </div>
+                    `;
+                    chatMessages.appendChild(initialMessage);
+                    chatInitialized = true;
+                    console.log('Mensaje inicial agregado');
+                }
+            }
+            
+            // Inicializar chat al cargar la página
+            addInitialMessage();
+            
+            // Toggle del chat - CORREGIDO Y SIMPLIFICADO
+            if (chatToggle && chatBody) {
+                chatToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // Alternar estado
+                    const isCollapsed = chatBody.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
+                        // Expandir
+                        chatBody.classList.remove('collapsed');
+                        this.querySelector('i').className = 'fas fa-chevron-down';
+                    } else {
+                        // Colapsar
+                        chatBody.classList.add('collapsed');
+                        this.querySelector('i').className = 'fas fa-chevron-up';
+                    }
+                });
+                
+                // También permitir abrir/cerrar haciendo clic en el header (excepto en el botón)
+                document.getElementById('chatHeader').addEventListener('click', function(e) {
+                    if (e.target !== chatToggle && !chatToggle.contains(e.target)) {
+                        chatToggle.click();
+                    }
+                });
+            }
+            
+            // Auto-resize del textarea
+            if (userInput) {
+                userInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+                
+                // Enviar mensaje con Enter (sin Shift)
+                userInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+            
+            // Botón de enviar
+            if (sendButton) {
+                sendButton.addEventListener('click', sendMessage);
+            }
+            
+            // Función para enviar mensaje
+            function sendMessage() {
+                if (!userInput || !chatMessages) return;
+                
+                const message = userInput.value.trim();
+                if (!message) return;
+                
+                // Agregar mensaje del usuario
+                addMessage(message, 'user');
+                
+                // Limpiar input
+                userInput.value = '';
+                userInput.style.height = 'auto';
+                
+                // Desplazar al final
+                scrollToBottom();
+                
+                // Simular respuesta automática después de un delay
+                setTimeout(() => {
+                    getAIResponse(message);
+                }, 1000);
+            }
+            
+            // Función para agregar mensaje
+            function addMessage(text, sender) {
+                if (!chatMessages) return;
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <p>${text}</p>
+                    </div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+                
+                // Asegurar que el chat esté abierto
+                if (chatBody && chatBody.classList.contains('collapsed')) {
+                    chatBody.classList.remove('collapsed');
+                    chatToggle.querySelector('i').className = 'fas fa-chevron-down';
+                }
+                
+                scrollToBottom();
+            }
+            
+            // Función para hacer scroll al final
+            function scrollToBottom() {
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+            
+            // Respuestas automáticas de IA (simplificadas)
+            function getAIResponse(userMessage) {
+                let response = '';
+                const lowerMessage = userMessage.toLowerCase();
+                
+                if (lowerMessage.includes('precio') || lowerMessage.includes('cuesta') || lowerMessage.includes('costo')) {
+                    response = 'Los precios varían según las soluciones. Te puedo dar una estimación:\n\n• Bot de WhatsApp: desde $80.000 + $15.000/mes\n• Web catálogo: desde $150.000\n• Redes sociales: desde $45.000/mes\n\n¿Te interesa alguna en particular?';
+                } else if (lowerMessage.includes('ferretería') || lowerMessage.includes('comercio') || lowerMessage.includes('negocio')) {
+                    response = '¡Perfecto! Trabajamos especialmente con ferreterías y comercios. Podemos automatizar consultas de stock, presupuestos automáticos, manejo de redes sociales y más. ¿Qué tipo de negocio tenés?';
+                } else if (lowerMessage.includes('redes') || lowerMessage.includes('instagram') || lowerMessage.includes('facebook')) {
+                    response = 'El manejo de redes sociales incluye contenido semanal:\n\n• Primera semana: 3 imágenes + 1 video\n• Semanas siguientes: 2 videos + 4 imágenes por semana\n\nTodo optimizado para tu negocio. ¿Te gustaría ver ejemplos?';
+                } else if (lowerMessage.includes('whatsapp') || lowerMessage.includes('bot')) {
+                    response = 'El bot de WhatsApp atiende automáticamente 24/7. Puede:\n\n• Responder consultas frecuentes\n• Enviar presupuestos automáticos\n• Confirmar pedidos\n• Derivar a un humano si es necesario\n\n¿Te gustaría una demo?';
+                } else if (lowerMessage.includes('hola') || lowerMessage.includes('buenas')) {
+                    response = '¡Hola! ¿En qué puedo ayudarte? Contame sobre tu negocio y te recomiendo soluciones.';
+                } else {
+                    response = 'Entiendo. Para darte una mejor recomendación, contame:\n\n1. ¿Qué tipo de negocio tenés?\n2. ¿Cuál es tu principal desafío?\n3. ¿Tenés algún presupuesto en mente?\n\nAsí te puedo orientar mejor 👍';
+                }
+                
+                addMessage(response, 'ai');
+            }
+            
+            // ===== TABS DE SERVICIOS =====
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            if (tabBtns.length > 0 && tabContents.length > 0) {
+                tabBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const tabId = this.getAttribute('data-tab');
+                        
+                        // Remover clase active de todos los botones
+                        tabBtns.forEach(b => b.classList.remove('active'));
+                        
+                        // Agregar clase active al botón clickeado
+                        this.classList.add('active');
+                        
+                        // Ocultar todos los contenidos
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        
+                        // Mostrar el contenido correspondiente
+                        const activeContent = document.getElementById(tabId);
+                        if (activeContent) {
+                            activeContent.classList.add('active');
+                        }
+                    });
+                });
+            }
+            
+            // ===== SCROLL SUAVE =====
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') === '#') return;
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        e.preventDefault();
+                        const headerHeight = document.querySelector('.main-header').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - headerHeight;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
             });
-        }
-        
-        // Prevenir que el logo sea demasiado grande
-        window.addEventListener('load', function() {
-            const logos = document.querySelectorAll('img[src*="logo"]');
-            logos.forEach(logo => {
-                // Asegurar que las imágenes mantengan proporción
-                logo.style.objectFit = 'contain';
-                logo.style.maxWidth = '100%';
-                logo.style.maxHeight = '100%';
+            
+            // ===== PREVENIR LOGOS GRANDES =====
+            window.addEventListener('load', function() {
+                const logos = document.querySelectorAll('img[src*="logo"]');
+                logos.forEach(logo => {
+                    logo.style.objectFit = 'contain';
+                    logo.style.maxWidth = '100%';
+                    logo.style.maxHeight = '100%';
+                });
             });
         });
     </script>
