@@ -12,7 +12,7 @@ const CONFIG = {
     // Configuración de precios (editables)
     PRICES: {
         WEB_CATALOG: "desde $150.000",
-        WHATSAPP_BOT: "desde $80.000 + $15.000/mes",
+        WHATSAPP_BOT: "desde $80.000 + $20.000/mes",
         MARKETING_MONTHLY: "desde $45.000 por mes",
         ADS_MANAGEMENT: "desde $30.000 + inversión en anuncios",
         AUTOMATION_CUSTOM: "se cotizan según necesidad (desde $120.000)",
