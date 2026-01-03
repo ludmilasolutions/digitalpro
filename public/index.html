@@ -11,10 +11,123 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <!-- Favicon & Logo -->
+    <link rel="icon" type="image/x-icon" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <style>
+        /* Estilos adicionales específicos para el logo */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+        
+        .logo-img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-main {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: #6675FF;
+        }
+        
+        .logo-sub {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Estilos para el placeholder con logo */
+        .placeholder-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 30px;
+            color: white;
+        }
+        
+        .placeholder-logo {
+            height: 80px;
+            width: auto;
+            margin-bottom: 20px;
+        }
+        
+        .placeholder-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .placeholder-subtitle {
+            opacity: 0.9;
+            font-size: 16px;
+            max-width: 300px;
+        }
+        
+        /* Estilos responsivos */
+        @media (max-width: 768px) {
+            .logo-img {
+                height: 35px;
+            }
+            
+            .logo-main {
+                font-size: 16px;
+            }
+            
+            .placeholder-logo {
+                height: 60px;
+            }
+            
+            .placeholder-title {
+                font-size: 22px;
+            }
+            
+            .placeholder-subtitle {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Header con Logo -->
+    <header class="main-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo-container">
+                    <img src="logo.png" alt="Soluciones Digitales para Negocios Locales" class="logo-img">
+                    <div class="logo-text">
+                        <span class="logo-main">Soluciones Digitales</span>
+                        <span class="logo-sub">Para Negocios Locales</span>
+                    </div>
+                </a>
+                <nav class="main-nav">
+                    <a href="#services">Servicios</a>
+                    <a href="#problems">Problemas</a>
+                    <a href="#process">Cómo Trabajamos</a>
+                    <a href="#benefits">Beneficios</a>
+                    <a href="#contact" class="nav-cta">
+                        <i class="fab fa-whatsapp"></i> Consultar Gratis
+                    </a>
+                </nav>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
     <!-- Chat IA Flotante -->
     <div class="chat-widget">
         <div class="chat-header">
@@ -53,38 +166,40 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <span class="badge">SOLUCIONES PARA NEGOCIOS LOCALES</span>
-                <h1>No pierdas ni una venta más por <span class="highlight">falta de tiempo o tecnología</span></h1>
-                <p class="hero-subtitle">Automatizamos tu negocio, manejamos tus redes y creamos herramientas digitales a medida. Más ventas, menos trabajo.</p>
-                <div class="hero-cta">
-                    <a href="#contact" class="btn btn-primary">
-                        <i class="fab fa-whatsapp"></i> Consultá gratis por WhatsApp
-                    </a>
-                    <a href="#services" class="btn btn-secondary">
-                        <i class="fas fa-play-circle"></i> Ver soluciones
-                    </a>
+                <div class="hero-text">
+                    <span class="badge">SOLUCIONES PARA NEGOCIOS LOCALES</span>
+                    <h1>No pierdas ni una venta más por <span class="highlight">falta de tiempo o tecnología</span></h1>
+                    <p class="hero-subtitle">Automatizamos tu negocio, manejamos tus redes y creamos herramientas digitales a medida. Más ventas, menos trabajo.</p>
+                    <div class="hero-cta">
+                        <a href="#contact" class="btn btn-primary">
+                            <i class="fab fa-whatsapp"></i> Consultá gratis por WhatsApp
+                        </a>
+                        <a href="#services" class="btn btn-secondary">
+                            <i class="fas fa-play-circle"></i> Ver soluciones
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <h3>+24/7</h3>
+                            <p>Atención automática</p>
+                        </div>
+                        <div class="stat">
+                            <h3>+30%</h3>
+                            <p>Ventas en promedio</p>
+                        </div>
+                        <div class="stat">
+                            <h3>-70%</h3>
+                            <p>Tareas manuales</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="hero-stats">
-                    <div class="stat">
-                        <h3>+24/7</h3>
-                        <p>Atención automática</p>
-                    </div>
-                    <div class="stat">
-                        <h3>+30%</h3>
-                        <p>Ventas en promedio</p>
-                    </div>
-                    <div class="stat">
-                        <h3>-70%</h3>
-                        <p>Tareas manuales</p>
-                    </div>
-                </div>
-            </div>
-            <div class="hero-image">
-                <!-- Imagen placeholder - puedes reemplazarla -->
-                <div style="width:100%; height:400px; background:linear-gradient(135deg, #6675FF 0%, #25D366 100%); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white;">
-                    <div style="text-align:center; padding:20px;">
-                        <i class="fas fa-store" style="font-size:60px; margin-bottom:20px;"></i>
-                        <p>Tu negocio digitalizado</p>
+                <div class="hero-image">
+                    <div class="hero-image-placeholder" style="background: linear-gradient(135deg, #6675FF 0%, #25D366 100%); border-radius: 12px;">
+                        <div class="placeholder-content">
+                            <img src="logo.png" alt="Logo Soluciones Digitales" class="placeholder-logo">
+                            <h3 class="placeholder-title">Tu negocio digitalizado</h3>
+                            <p class="placeholder-subtitle">Con herramientas diseñadas específicamente para comercios locales</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,8 +246,10 @@
     <!-- Servicios -->
     <section class="services" id="services">
         <div class="container">
-            <h2>Soluciones que implementamos</h2>
-            <p class="section-subtitle">Todo lo que tu negocio necesita para vender más y trabajar menos</p>
+            <div class="section-header">
+                <h2>Soluciones que implementamos</h2>
+                <p class="section-subtitle">Todo lo que tu negocio necesita para vender más y trabajar menos</p>
+            </div>
             
             <div class="services-tabs">
                 <button class="tab-btn active" data-tab="automation">
@@ -269,7 +386,7 @@
     </section>
 
     <!-- Cómo Trabajamos -->
-    <section class="process">
+    <section class="process" id="process">
         <div class="container">
             <h2>Cómo transformamos tu negocio</h2>
             <div class="process-steps">
@@ -298,7 +415,7 @@
     </section>
 
     <!-- Beneficios -->
-    <section class="benefits">
+    <section class="benefits" id="benefits">
         <div class="container">
             <h2>¿Qué lográs con nuestras soluciones?</h2>
             <div class="benefits-grid">
@@ -346,18 +463,74 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer>
         <div class="container">
-            <p>© 2024 Soluciones Digitales. Hecho en Argentina.</p>
-            <p class="footer-contact">
-                <i class="fab fa-whatsapp"></i> Solo contacto por WhatsApp | 
-                <i class="fas fa-map-marker-alt"></i> Para todo tipo de negocios.
-            </p>
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="logo.png" alt="Logo Soluciones Digitales" class="logo-img">
+                    <div class="logo-text">
+                        <span class="logo-main">Soluciones Digitales</span>
+                        <span class="logo-sub">Para Negocios Locales</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <p>© 2024 Soluciones Digitales para Negocios Locales. Hecho en Argentina.</p>
+                    <p class="footer-contact">
+                        <i class="fab fa-whatsapp"></i> Solo contacto por WhatsApp | 
+                        <i class="fas fa-map-marker-alt"></i> Para ferreterías, comercios, talleres, pymes
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 
     <!-- JavaScript -->
     <script src="config.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Script adicional para el logo y navegación -->
+    <script>
+        // Toggle del menú móvil
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            document.querySelector('.main-nav').classList.toggle('active');
+        });
+        
+        // Cerrar menú al hacer clic en un enlace
+        document.querySelectorAll('.main-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelector('.main-nav').classList.remove('active');
+            });
+        });
+        
+        // WhatsApp button functionality
+        document.getElementById('finalWhatsAppBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            // Replace with your WhatsApp number
+            const phoneNumber = '5491111111111'; // Example: Argentina number
+            const message = 'Hola! Vi su página web y me interesa conocer más sobre sus soluciones digitales para mi negocio.';
+            const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, '_blank');
+        });
+        
+        // Chat toggle functionality
+        document.querySelector('.chat-toggle').addEventListener('click', function() {
+            document.querySelector('.chat-body').classList.toggle('collapsed');
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-chevron-down')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        });
+        
+        // Auto-resize textarea in chat
+        document.getElementById('userInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
 </body>
 </html>
