@@ -1,35 +1,27 @@
-// config.js - Configuración para Netlify
+// config.js - CONFIGURACIÓN ACTUALIZADA
 const CONFIG = {
-    // IMPORTANTE: Usar siempre serverless endpoint en Netlify
+    // Configuración de endpoints
     USE_SERVERLESS_ENDPOINT: true,
-    
-    // Ruta a la función serverless de Netlify
     SERVERLESS_ENDPOINT: "/.netlify/functions/gemini",
     
-    // Número de WhatsApp
-    WHATSAPP_PHONE: "5493417558966", // Reemplazá con tu número
+    // WhatsApp (usa tu número real)
+    WHATSAPP_PHONE: "5493417558966",
     
-    // Configuración de precios
-    PRICES: {
-        WEB_CATALOG: "desde $150.000",
-        WHATSAPP_BOT: "desde $80.000 + $20.000/mes",
-        MARKETING_MONTHLY: "desde $45.000 por mes",
-        ADS_MANAGEMENT: "desde $30.000 + inversión en anuncios",
-        AUTOMATION_CUSTOM: "se cotizan según necesidad (desde $120.000)",
-        QUOTES_AUTOMATIC: "desde $60.000"
-    },
-    
-    // Nombre del negocio
-    BUSINESS_NAME: "Soluciones Digitales para Negocios Locales",
-    
-    // Configuración del chat
+    // Configuración del chat IA
     CHAT: {
-        INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇",
-        TYPING_DELAY: 1000,
-        MAX_HISTORY: 20,
-        ENABLE_AI: true // Activar IA real
+        INITIAL_MESSAGE: "¡Hola! Soy tu asesor digital IA. Contame sobre tu negocio y te ayudo con soluciones 👇",
+        ENABLE_REAL_AI: true, // Activar IA real
+        MAX_HISTORY: 8
     }
 };
 
-// Hacer config disponible globalmente
-window.CONFIG = CONFIG;
+// Asegurar que se exporte globalmente
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+    console.log('✅ Config.js cargado correctamente', CONFIG);
+}
+
+// También exportar para módulos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = CONFIG;
+}
