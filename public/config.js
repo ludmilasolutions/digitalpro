@@ -7,7 +7,7 @@ const CONFIG = {
     SERVERLESS_ENDPOINT: "/.netlify/functions/gemini",
     
     // Número de WhatsApp (Argentina: 54 + código de área + número, sin + ni espacios)
-    WHATSAPP_PHONE: "5491112345678", // Reemplazá con tu número
+    WHATSAPP_PHONE: "5493417558966", // Reemplazá con tu número
     
     // Configuración de precios (editables)
     PRICES: {
