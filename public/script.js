@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatToggle = document.querySelector('.chat-toggle');
     const chatBody = document.querySelector('.chat-body');
     const chatHeader = document.querySelector('.chat-header');
-    const finalWhatsAppBtn = document.getElementById('finalWhatsAppBtn');
-    const heroWhatsAppBtn = document.getElementById('heroWhatsAppBtn');
     
     // ===== VARIABLES DE ESTADO =====
     let chatInitialized = false;
@@ -19,21 +17,20 @@ document.addEventListener('DOMContentLoaded', function() {
         businessType: '',
         interestedServices: [],
         networks: '',
-        mainGoal: ''
+        mainGoal: '',
+        problems: []
     };
     
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
         CHAT: {
             INITIAL_MESSAGE: '¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇',
-            MAX_HISTORY: 10
+            MAX_HISTORY: 15
         },
-        WHATSAPP_PHONE: '5491111111111', // Reemplazar con tu número real
-        USE_SERVERLESS_ENDPOINT: false,
-        GEMINI_API_KEY: ''
+        WHATSAPP_PHONE: '5491111111111'
     };
     
-    // ===== SISTEMA DE CHAT - CORREGIDO =====
+    // ===== SISTEMA DE CHAT - MEJORADO =====
     
     // 1. Función para agregar mensaje inicial UNA SOLA VEZ
     function addInitialMessage() {
@@ -51,7 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Agregar al historial
             conversationHistory.push({
                 role: 'assistant',
-                content: CONFIG.CHAT.INITIAL_MESSAGE
+                content: CONFIG.CHAT.INITIAL_MESSAGE,
+                timestamp: new Date().toISOString()
             });
             
             console.log('✅ Mensaje inicial agregado');
@@ -61,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Inicializar chat
     addInitialMessage();
     
-    // 3. Toggle del chat - COMPLETAMENTE CORREGIDO
+    // 3. Toggle del chat - MEJORADO
     if (chatToggle && chatBody) {
         chatToggle.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -72,11 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Cambiar ícono
             const icon = this.querySelector('i');
             if (chatBody.classList.contains('collapsed')) {
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-up');
+                icon.className = 'fas fa-chevron-up';
             } else {
-                icon.classList.remove('fa-chevron-up');
-                icon.classList.add('fa-chevron-down');
+                icon.className = 'fas fa-chevron-down';
                 // Hacer scroll al final al abrir
                 setTimeout(scrollToBottom, 100);
             }
@@ -130,10 +126,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
-        const paragraph = document.createElement('p');
-        paragraph.innerHTML = text;
+        // Limpiar y formatear el texto para HTML seguro
+        const formattedText = text
+            .replace(/\n/g, '<br>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
         
-        contentDiv.appendChild(paragraph);
+        contentDiv.innerHTML = `<p>${formattedText}</p>`;
         messageDiv.appendChild(contentDiv);
         chatMessages.appendChild(messageDiv);
         
@@ -141,8 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chatBody && chatBody.classList.contains('collapsed')) {
             chatBody.classList.remove('collapsed');
             if (chatToggle) {
-                chatToggle.querySelector('i').classList.remove('fa-chevron-up');
-                chatToggle.querySelector('i').classList.add('fa-chevron-down');
+                chatToggle.querySelector('i').className = 'fas fa-chevron-down';
             }
         }
         
@@ -152,7 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Agregar al historial
         conversationHistory.push({
             role: sender === 'user' ? 'user' : 'assistant',
-            content: text
+            content: text,
+            timestamp: new Date().toISOString()
         });
         
         // Limitar historial
@@ -161,69 +160,141 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 8. Extraer datos del usuario de la conversación
+    // 8. Extraer datos del usuario de la conversación - MEJORADO
     function extractUserDataFromMessage(message) {
         const lowerMsg = message.toLowerCase();
         
-        // Detectar tipo de negocio
-        if (lowerMsg.includes('ferretería') || lowerMsg.includes('ferreteria')) {
-            userData.businessType = 'Ferretería';
-        } else if (lowerMsg.includes('comercio') || lowerMsg.includes('negocio') || lowerMsg.includes('local')) {
-            userData.businessType = 'Comercio local';
-        } else if (lowerMsg.includes('taller')) {
-            userData.businessType = 'Taller';
-        } else if (lowerMsg.includes('corralón') || lowerMsg.includes('corralon')) {
-            userData.businessType = 'Corralón';
-        } else if (lowerMsg.includes('pyme') || lowerMsg.includes('empresa')) {
-            userData.businessType = 'Pyme';
-        } else if (lowerMsg.includes('tienda') || lowerMsg.includes('almacén') || lowerMsg.includes('almacen')) {
-            userData.businessType = 'Tienda';
-        }
+        console.log('🔍 Analizando mensaje:', lowerMsg);
         
-        // Detectar servicios de interés
+        // Detectar tipo de negocio (más opciones)
+        const businessTypes = [
+            { keywords: ['ferretería', 'ferreteria', 'ferretero', 'ferreter'], value: 'Ferretería' },
+            { keywords: ['comercio', 'negocio', 'local', 'tienda', 'almacén', 'almacen', 'kiosco', 'kiosko'], value: 'Comercio local' },
+            { keywords: ['taller', 'mecánico', 'mecanico', 'reparación', 'reparacion'], value: 'Taller' },
+            { keywords: ['corralón', 'corralon', 'materiales', 'construcción', 'construccion'], value: 'Corralón de materiales' },
+            { keywords: ['pyme', 'empresa', 'emprendimiento', 'emprendedor'], value: 'Pyme/Emprendimiento' },
+            { keywords: ['restaurant', 'restaurante', 'cafetería', 'cafeteria', 'bar', 'comida'], value: 'Restaurante/Cafetería' },
+            { keywords: ['peluquería', 'peluqueria', 'barbería', 'barberia', 'estética', 'estetica'], value: 'Peluquería/Estética' },
+            { keywords: ['farmacia', 'farmacéutico', 'farmaceutico'], value: 'Farmacia' },
+            { keywords: ['veterinaria', 'veterinario', 'mascota'], value: 'Veterinaria' },
+            { keywords: ['ropa', 'indumentaria', 'moda', 'vestimenta'], value: 'Tienda de ropa' }
+        ];
+        
+        businessTypes.forEach(type => {
+            if (type.keywords.some(keyword => lowerMsg.includes(keyword))) {
+                userData.businessType = type.value;
+                console.log(`🏪 Tipo de negocio detectado: ${type.value}`);
+            }
+        });
+        
+        // Detectar servicios de interés (más específico)
         const services = [
-            { key: 'web', terms: ['web', 'catálogo', 'catalogo', 'página', 'pagina', 'sitio'] },
-            { key: 'bot', terms: ['bot', 'whatsapp', 'automático', 'automatico', 'atención automática', 'atencion automatica'] },
-            { key: 'marketing', terms: ['marketing', 'redes', 'social', 'instagram', 'facebook', 'contenido'] },
-            { key: 'publicidad', terms: ['publicidad', 'anuncios', 'ads', 'promocionar'] },
-            { key: 'automatización', terms: ['automatiz', 'automatización', 'automatizacion', 'proceso', 'sistema'] },
-            { key: 'presupuesto', terms: ['presupuesto', 'cotización', 'cotizacion', 'precio automático'] }
+            { 
+                key: 'web', 
+                terms: ['web', 'catálogo', 'catalogo', 'página web', 'pagina web', 'sitio web', 'online', 'internet'] 
+            },
+            { 
+                key: 'bot', 
+                terms: ['bot', 'whatsapp', 'automático', 'automatico', 'atención automática', 'atencion automatica', 'chatbot'] 
+            },
+            { 
+                key: 'marketing', 
+                terms: ['marketing', 'redes sociales', 'instagram', 'facebook', 'contenido', 'redes', 'social media'] 
+            },
+            { 
+                key: 'publicidad', 
+                terms: ['publicidad', 'anuncios', 'ads', 'promocionar', 'promoción', 'promocion'] 
+            },
+            { 
+                key: 'automatización', 
+                terms: ['automatiz', 'automatización', 'automatizacion', 'proceso', 'sistema', 'automatizar'] 
+            },
+            { 
+                key: 'presupuesto', 
+                terms: ['presupuesto', 'cotización', 'cotizacion', 'precio automático', 'presupuestar'] 
+            },
+            { 
+                key: 'imagenes', 
+                terms: ['imágenes', 'imagenes', 'fotos', 'fotografía', 'fotografia', 'video', 'videos'] 
+            }
         ];
         
         services.forEach(service => {
             if (service.terms.some(term => lowerMsg.includes(term))) {
                 if (!userData.interestedServices.includes(service.key)) {
                     userData.interestedServices.push(service.key);
+                    console.log(`📱 Servicio detectado: ${service.key}`);
                 }
             }
         });
         
         // Detectar redes sociales
-        if (lowerMsg.includes('instagram')) {
-            userData.networks = 'Instagram';
-        } else if (lowerMsg.includes('facebook')) {
-            userData.networks = userData.networks ? userData.networks + ', Facebook' : 'Facebook';
-        } else if (lowerMsg.includes('tiktok')) {
-            userData.networks = userData.networks ? userData.networks + ', TikTok' : 'TikTok';
+        const networks = [
+            { keyword: 'instagram', value: 'Instagram' },
+            { keyword: 'facebook', value: 'Facebook' },
+            { keyword: 'tiktok', value: 'TikTok' },
+            { keyword: 'twitter', value: 'Twitter/X' },
+            { keyword: 'linkedin', value: 'LinkedIn' }
+        ];
+        
+        networks.forEach(network => {
+            if (lowerMsg.includes(network.keyword)) {
+                if (userData.networks) {
+                    if (!userData.networks.includes(network.value)) {
+                        userData.networks += ', ' + network.value;
+                    }
+                } else {
+                    userData.networks = network.value;
+                }
+            }
+        });
+        
+        // Detectar problemas
+        const problems = [
+            { keyword: 'tiempo', value: 'Falta de tiempo' },
+            { keyword: 'no tengo tiempo', value: 'Falta de tiempo' },
+            { keyword: 'no llego', value: 'No llego a responder/atender' },
+            { keyword: 'no respondo', value: 'No llego a responder/atender' },
+            { keyword: 'no atiendo', value: 'No llego a responder/atender' },
+            { keyword: 'mensaje', value: 'Muchos mensajes/consultas' },
+            { keyword: 'consulta', value: 'Muchos mensajes/consultas' },
+            { keyword: 'visible', value: 'No soy visible/No me conocen' },
+            { keyword: 'competencia', value: 'La competencia me supera' },
+            { keyword: 'venta', value: 'Bajo volumen de ventas' },
+            { keyword: 'no vendo', value: 'Bajo volumen de ventas' },
+            { keyword: 'manual', value: 'Procesos manuales/lentos' },
+            { keyword: 'lento', value: 'Procesos manuales/lentos' },
+            { keyword: 'error', value: 'Errores en procesos' }
+        ];
+        
+        problems.forEach(problem => {
+            if (lowerMsg.includes(problem.keyword) && !userData.problems.includes(problem.value)) {
+                userData.problems.push(problem.value);
+                console.log(`⚠️ Problema detectado: ${problem.value}`);
+            }
+        });
+        
+        // Detectar objetivos principales
+        if (lowerMsg.includes('vender') || lowerMsg.includes('venta') || lowerMsg.includes('ingreso') || lowerMsg.includes('dinero')) {
+            userData.mainGoal = 'Vender más/aumentar ingresos';
+        } else if (lowerMsg.includes('tiempo') || lowerMsg.includes('automatizar') || lowerMsg.includes('automatico') || lowerMsg.includes('optimizar')) {
+            userData.mainGoal = 'Ahorrar tiempo/automatizar procesos';
+        } else if (lowerMsg.includes('cliente') || lowerMsg.includes('atención') || lowerMsg.includes('atencion') || lowerMsg.includes('servicio')) {
+            userData.mainGoal = 'Mejorar atención/servicio al cliente';
+        } else if (lowerMsg.includes('visible') || lowerMsg.includes('conocido') || lowerMsg.includes('presencia') || lowerMsg.includes('reconocimiento')) {
+            userData.mainGoal = 'Mayor presencia/reconocimiento digital';
+        } else if (lowerMsg.includes('organizar') || lowerMsg.includes('orden') || lowerMsg.includes('proceso') || lowerMsg.includes('eficiencia')) {
+            userData.mainGoal = 'Organizar procesos/mejorar eficiencia';
         }
         
-        // Detectar objetivos
-        if (lowerMsg.includes('vender') || lowerMsg.includes('venta') || lowerMsg.includes('ingreso')) {
-            userData.mainGoal = 'Vender más';
-        } else if (lowerMsg.includes('tiempo') || lowerMsg.includes('automatizar') || lowerMsg.includes('automatico')) {
-            userData.mainGoal = 'Ahorrar tiempo y automatizar';
-        } else if (lowerMsg.includes('cliente') || lowerMsg.includes('atención') || lowerMsg.includes('atencion')) {
-            userData.mainGoal = 'Mejorar la atención al cliente';
-        } else if (lowerMsg.includes('visible') || lowerMsg.includes('conocido') || lowerMsg.includes('presencia')) {
-            userData.mainGoal = 'Mayor presencia digital';
-        } else if (lowerMsg.includes('organizar') || lowerMsg.includes('orden')) {
-            userData.mainGoal = 'Organizar mejor el negocio';
+        if (userData.mainGoal) {
+            console.log(`🎯 Objetivo detectado: ${userData.mainGoal}`);
         }
         
-        console.log('📊 Datos del usuario actualizados:', userData);
+        console.log('📊 Datos actuales del usuario:', userData);
     }
     
-    // 9. Generar resumen para WhatsApp
+    // 9. Generar resumen para WhatsApp - MEJORADO
     function generateWhatsAppSummary() {
         const serviceMap = {
             'web': 'Web catálogo',
@@ -231,17 +302,27 @@ document.addEventListener('DOMContentLoaded', function() {
             'marketing': 'Marketing digital',
             'publicidad': 'Publicidad digital',
             'automatización': 'Automatizaciones a medida',
-            'presupuesto': 'Presupuestos automáticos'
+            'presupuesto': 'Presupuestos automáticos',
+            'imagenes': 'Creación de imágenes/videos'
         };
         
         const servicesText = userData.interestedServices
             .map(key => serviceMap[key] || key)
             .join('\n- ');
         
-        return `Hola, quiero consultar por los siguientes servicios:
-- ${servicesText || 'Por definir'}
+        const problemsText = userData.problems.length > 0 
+            ? `Problemas identificados:\n${userData.problems.join('\n')}`
+            : 'Problemas: Por definir';
+        
+        return `Hola, quiero consultar por soluciones digitales para mi negocio:
 
 Tipo de negocio: ${userData.businessType || 'Por definir'}
+
+Servicios que me interesan:
+- ${servicesText || 'Por definir'}
+
+${problemsText}
+
 Redes a trabajar: ${userData.networks || 'Por definir'}
 Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
     }
@@ -253,22 +334,22 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = `<p>${messageText}</p>`;
+        contentDiv.innerHTML = `<p>${messageText.replace(/\n/g, '<br>')}</p>`;
         
         // Crear botón de WhatsApp
         const whatsappBtn = document.createElement('button');
-        whatsappBtn.className = 'btn btn-primary whatsapp-action-btn';
+        whatsappBtn.className = 'whatsapp-action-btn';
         whatsappBtn.style.cssText = `
             margin-top: 15px;
             width: 100%;
-            padding: 12px;
+            padding: 12px 16px;
             background: #25D366;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-family: inherit;
+            font-family: 'Open Sans', sans-serif;
             font-size: 14px;
             display: flex;
             flex-direction: column;
@@ -276,12 +357,13 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
             justify-content: center;
             gap: 5px;
             transition: all 0.3s ease;
+            text-align: center;
         `;
         
         whatsappBtn.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fab fa-whatsapp"></i> 
-                <strong>Continuar por WhatsApp</strong>
+            <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                <i class="fab fa-whatsapp" style="font-size: 18px;"></i> 
+                <strong style="font-size: 15px;">Continuar por WhatsApp</strong>
             </div>
             <small style="font-weight: normal; font-size: 12px; opacity: 0.9;">
                 Te llevamos con toda la información que conversamos
@@ -325,7 +407,8 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         // Agregar al historial
         conversationHistory.push({
             role: 'assistant',
-            content: messageText
+            content: messageText,
+            timestamp: new Date().toISOString()
         });
     }
     
@@ -349,11 +432,11 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         // Mostrar indicador de "escribiendo"
         const typingIndicator = document.createElement('div');
         typingIndicator.className = 'message ai typing';
-        typingIndicator.innerHTML = '<div class="message-content"><p><i class="fas fa-ellipsis-h"></i> Escribiendo...</p></div>';
+        typingIndicator.innerHTML = '<div class="message-content"><p><i class="fas fa-ellipsis-h"></i> Analizando tu mensaje...</p></div>';
         chatMessages.appendChild(typingIndicator);
         scrollToBottom();
         
-        // Simular respuesta de IA después de un delay
+        // Generar respuesta después de un delay (simulando procesamiento)
         setTimeout(() => {
             // Remover indicador
             if (typingIndicator.parentNode === chatMessages) {
@@ -362,120 +445,298 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
             
             // Generar respuesta basada en el mensaje del usuario
             getAIResponse(message);
-        }, 1500);
+        }, 1000);
     }
     
-    // 12. Respuestas automáticas de IA
+    // 12. SISTEMA DE RESPUESTAS INTELIGENTES - COMPLETAMENTE REHECHO
     function getAIResponse(userMessage) {
-        let response = '';
         const lowerMessage = userMessage.toLowerCase();
         
-        // SYSTEM PROMPT
-        const systemPrompt = `Eres un asesor comercial digital para negocios locales en Argentina.
+        console.log('🤖 Procesando respuesta para:', lowerMessage);
         
-        Tu objetivo es entender el negocio del cliente y recomendar soluciones digitales.
-        
-        Servicios disponibles:
-        1. Web catálogo para comercios
-        2. Bot de WhatsApp
-        3. Presupuestos automáticos con IA
-        4. Marketing digital (redes, imágenes, videos)
-        5. Publicidad digital
-        6. Automatizaciones a medida
-        
-        Precios estimativos:
-        - Web catálogo: desde $150.000
-        - Bot de WhatsApp: desde $80.000 + $15.000/mes
-        - Marketing mensual: desde $45.000 por mes
-        - Publicidad digital: desde $30.000 + inversión en anuncios
-        - Automatizaciones a medida: desde $120.000
-        - Presupuestos automáticos: desde $60.000
-        
-        Siempre aclarar que los precios son estimativos y se confirman por WhatsApp.`;
-        
-        // Lógica de respuestas contextuales
-        if (lowerMessage.includes('precio') || lowerMessage.includes('cuesta') || lowerMessage.includes('costo')) {
-            response = 'Los precios varían según las soluciones. Te puedo dar una estimación:\n\n' +
-                      '• Bot de WhatsApp: desde $80.000 + $15.000/mes\n' +
-                      '• Web catálogo: desde $150.000\n' +
-                      '• Redes sociales: desde $45.000/mes\n' +
-                      '• Publicidad digital: desde $30.000 + inversión en anuncios\n' +
-                      '• Automatizaciones a medida: desde $120.000\n' +
-                      '• Presupuestos automáticos: desde $60.000\n\n' +
-                      '¿Te interesa alguna en particular?';
-                      
-        } else if (lowerMessage.includes('hola') || lowerMessage.includes('buenas') || lowerMessage.includes('buenos')) {
-            response = '¡Hola! 😊 Soy tu asesor digital. ¿Qué tipo de negocio tenés?';
+        // MAPA DE INTENCIONES Y RESPUESTAS
+        const intentResponses = {
+            // Saludos
+            'saludo': {
+                keywords: ['hola', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches', 'hi', 'hello'],
+                response: '¡Hola! 😊 Soy tu asesor digital para negocios locales. ¿Me podés contar qué tipo de negocio tenés?'
+            },
             
-        } else if (lowerMessage.includes('ferretería') || lowerMsg.includes('ferreteria') || 
-                   lowerMessage.includes('comercio') || lowerMessage.includes('negocio') || 
-                   lowerMessage.includes('taller') || lowerMessage.includes('tienda')) {
-            response = '¡Perfecto! Trabajamos especialmente con negocios locales como el tuyo. ¿Qué es lo que más te gustaría mejorar o automatizar?';
+            // Tipo de negocio
+            'negocio': {
+                keywords: ['tengo', 'soy', 'trabajo en', 'mi negocio es', 'ferretería', 'ferreteria', 'comercio', 'tienda', 'taller', 'corralón', 'corralon', 'pyme', 'empresa'],
+                response: `¡Excelente! Trabajamos mucho con ${userData.businessType || 'negocios como el tuyo'}. 
+                
+¿Qué es lo que más te gustaría mejorar? Por ejemplo:
+• Atender más consultas automáticamente
+• Vender más por redes sociales
+• Tener una web con tus productos
+• Automatizar presupuestos
+• Crear contenido profesional
+
+¿Alguna de estas te interesa?`
+            },
             
-        } else if (lowerMessage.includes('redes') || lowerMessage.includes('instagram') || lowerMessage.includes('facebook')) {
-            response = 'El manejo de redes sociales es clave hoy en día. Incluye contenido semanal:\n\n' +
-                      '• Primera semana: 3 imágenes + 1 video\n' +
-                      '• Semanas siguientes: 2 videos + 4 imágenes por semana\n\n' +
-                      'Todo optimizado para tu negocio. ¿Te gustaría saber más?';
-                      
-        } else if (lowerMessage.includes('whatsapp') || lowerMessage.includes('bot')) {
-            response = 'El bot de WhatsApp es una gran solución. Atiende automáticamente 24/7 y puede:\n\n' +
-                      '• Responder consultas frecuentes\n' +
-                      '• Enviar presupuestos automáticos\n' +
-                      '• Confirmar pedidos\n' +
-                      '• Derivar a un humano si es necesario\n\n' +
-                      '¿Te gustaría que te cuente más detalles?';
-                      
-        } else if (lowerMessage.includes('web') || lowerMessage.includes('página') || lowerMessage.includes('pagina') || lowerMessage.includes('sitio')) {
-            response = 'La web catálogo es perfecta para mostrar tus productos online. No es una tienda (no vende online), pero sirve para que los clientes:\n\n' +
-                      '• Vean tus productos y precios\n' +
-                      '• Te contacten directamente\n' +
-                      '• Reciban atención 24/7\n\n' +
-                      'Se hace a medida para tu negocio. ¿Te interesa?';
-                      
-        } else if (lowerMessage.includes('tiempo') || lowerMessage.includes('ocupado') || lowerMessage.includes('mucho trabajo')) {
-            response = 'Entiendo, el tiempo es oro. Por eso nuestras soluciones te ayudan a:\n\n' +
-                      '• Automatizar consultas y presupuestos\n' +
-                      '• Reducir tareas manuales hasta un 70%\n' +
-                      '• Atender más clientes en menos tiempo\n\n' +
-                      '¿Qué tarea te consume más tiempo actualmente?';
-                      
-        } else if (lowerMessage.includes('vender') || lowerMessage.includes('ventas') || lowerMessage.includes('clientes')) {
-            response = '¡Excelente enfoque! Para vender más podemos trabajar en:\n\n' +
-                      '1. Más visibilidad (redes + publicidad)\n' +
-                      '2. Mejor atención (bots 24/7)\n' +
-                      '3. Seguimiento automatizado\n' +
-                      '4. Catálogo online accesible\n\n' +
-                      '¿Por dónde te gustaría empezar?';
-                      
-        } else if (lowerMessage.includes('gracias') || lowerMessage.includes('gracias')) {
-            response = '¡De nada! 😊 Mi trabajo es ayudarte a encontrar la mejor solución para tu negocio. ¿Hay algo más en lo que te pueda ayudar?';
+            // Problemas específicos
+            'problema_tiempo': {
+                keywords: ['no tengo tiempo', 'no me da el tiempo', 'estoy muy ocupado', 'mucho trabajo', 'no llego'],
+                response: `¡Te entiendo perfectamente! El tiempo es lo más valioso que tenés.
+
+Con nuestras soluciones podés:
+• **Reducir hasta el 70%** de tareas manuales
+• Atender consultas **automáticamente 24/7**
+• Generar presupuestos **en segundos**
+• Manejar redes sociales **sin dedicar horas**
+
+¿Qué tarea te consume más tiempo actualmente?`
+            },
             
-        } else {
-            // Respuesta por defecto
-            response = 'Entiendo. Para recomendarte la mejor solución, contame:\n\n' +
-                      '1. ¿Qué tipo de negocio tenés? (ferretería, comercio, taller, etc.)\n' +
-                      '2. ¿Cuál es tu principal desafío? (tiempo, ventas, visibilidad, etc.)\n' +
-                      '3. ¿Tenés preferencia por alguna solución digital?\n\n' +
-                      'Así te puedo orientar mejor 👍';
+            'problema_consultas': {
+                keywords: ['muchos mensajes', 'no respondo', 'whatsapp lleno', 'instagram lleno', 'no atiendo', 'consultas'],
+                response: `¡Es muy común! Muchos negocios pierden ventas por no poder responder a tiempo.
+
+Te propongo un **Bot de WhatsApp** que:
+• Atiende consultas frecuentes **automáticamente**
+• Envía presupuestos **al instante**
+• Deriva consultas complejas a vos
+• Funciona **24/7**, incluso de madrugada
+
+¿Te gustaría saber más sobre cómo funciona?`
+            },
+            
+            'problema_ventas': {
+                keywords: ['no vendo', 'pocas ventas', 'quiero vender más', 'aumentar ventas', 'más clientes'],
+                response: `¡Vamos a solucionarlo! Para vender más necesitás:
+
+1. **Más visibilidad** (redes sociales + publicidad)
+2. **Mejor atención** (respuestas rápidas 24/7)
+3. **Presencia online** (web catálogo accesible)
+4. **Seguimiento automatizado** (no perder oportunidades)
+
+¿Por dónde te gustaría empezar?`
+            },
+            
+            'problema_visible': {
+                keywords: ['no me conocen', 'no soy visible', 'la competencia', 'no aparezco', 'instagram', 'facebook'],
+                response: `La visibilidad es clave hoy en día. Te ayudo con:
+
+📱 **Marketing Digital Completo:**
+• Contenido semanal para redes
+• Imágenes y videos profesionales
+• Estrategia de publicidad
+• Crecimiento orgánico
+
+🌐 **Web Catálogo:**
+• Tus productos online 24/7
+• Diseño profesional
+• Optimizada para celulares
+• Contacto directo
+
+¿Te interesa alguna opción?`
+            },
+            
+            // Servicios específicos
+            'servicio_web': {
+                keywords: ['web', 'página web', 'pagina web', 'sitio web', 'online', 'internet', 'catálogo', 'catalogo'],
+                response: `¡La web catálogo es ideal para negocios locales!
+
+**¿Qué incluye?**
+• Diseño profesional adaptado a tu negocio
+• Catálogo de productos/servicios
+• Información de contacto visible
+• Optimizada para celulares
+• Integración con WhatsApp
+
+**Inversión:** Desde $150.000 (única vez)
+
+**No es una tienda online** - es tu vitrina digital para que los clientes te conozcan y te contacten.
+
+¿Te gustaría ver ejemplos?`
+            },
+            
+            'servicio_bot': {
+                keywords: ['bot', 'whatsapp', 'automático', 'automatico', 'chatbot', 'atención automática'],
+                response: `El **Bot de WhatsApp** es nuestro servicio más solicitado:
+
+**Beneficios:**
+• Atiende consultas **24/7 sin tu intervención**
+• Envía presupuestos **automáticamente**
+• Responde preguntas frecuentes
+• Toma datos para seguimiento
+• Deriva a humano cuando es necesario
+
+**Inversión:** 
+• Desarrollo: Desde $80.000
+• Mensualidad: $15.000/mes (mantenimiento y actualizaciones)
+
+**Ejemplo de uso:**
+Cliente escribe: "¿Tienen tornillos 3x20?"
+Bot responde: "¡Sí! Tenemos tornillos 3x20. ¿Cuántas unidades necesitás? El precio por 100 unidades es $4.500"
+
+¿Te sirve para tu negocio?`
+            },
+            
+            'servicio_marketing': {
+                keywords: ['marketing', 'redes sociales', 'instagram', 'facebook', 'contenido', 'redes'],
+                response: `¡El marketing digital es esencial hoy!
+
+**Nuestro servicio incluye:**
+
+📅 **Primer mes (especial):**
+• 3 imágenes profesionales
+• 1 video promocional
+• Estrategia personalizada
+
+📅 **Meses siguientes (por semana):**
+• 2 videos cortos
+• 4 imágenes
+• Historias diarias
+• Interacción con seguidores
+
+**Inversión:** Desde $45.000 por mes
+
+**Todo basado en:** Tus productos, promociones, novedades y lo que haga único tu negocio.
+
+¿Te gustaría saber más?`
+            },
+            
+            'servicio_publicidad': {
+                keywords: ['publicidad', 'anuncios', 'ads', 'promocionar', 'aparecer primero'],
+                response: `La publicidad digital te pone frente a clientes locales:
+
+**Campañas en:**
+• Instagram y Facebook
+• Google (búsquedas locales)
+• Audiencias específicas
+
+**Inversión:**
+• Nuestro trabajo: Desde $30.000
+• Inversión en anuncios: Vos decidís el presupuesto (recomendamos $10.000-$50.000/mes para empezar)
+
+**Controlamos:**
+• Optimización diaria
+• Segmentación precisa
+• Resultados medibles
+• Ajustes constantes
+
+¿Para qué rubro querés hacer publicidad?`
+            },
+            
+            // Precios y costos
+            'precio': {
+                keywords: ['precio', 'cuesta', 'costo', 'cuánto', 'cuanto', 'valor', 'inversión', 'inversion'],
+                response: `Los precios varían según cada solución:
+
+**Desarrollo único:**
+• Web catálogo: **Desde $150.000**
+• Bot de WhatsApp: **Desde $80.000**
+• Presupuestos automáticos: **Desde $60.000**
+• Automatizaciones: **Desde $120.000** (según complejidad)
+
+**Servicios mensuales:**
+• Bot de WhatsApp: **$15.000/mes**
+• Marketing digital: **Desde $45.000/mes**
+• Publicidad: **Desde $30.000/mes** + inversión en anuncios
+
+**¡Importante!** Los precios son estimativos. El precio final depende de las necesidades específicas de tu negocio y se confirma en la consulta por WhatsApp.
+
+¿Qué servicio te interesa para darte más detalles?`
+            },
+            
+            // WhatsApp y contacto
+            'whatsapp': {
+                keywords: ['whatsapp', 'contacto', 'hablar', 'llamar', 'consultar', 'asesor', 'persona'],
+                response: `¡Claro! Para una atención más personalizada y confirmar precios exactos, te recomiendo continuar por WhatsApp.
+
+Allí podés:
+• Consultar precios específicos para tu negocio
+• Ver ejemplos reales de trabajos
+• Coordinar una reunión virtual
+• Resolver todas tus dudas
+
+¿Te preparo un resumen con todo lo que hablamos para continuar por WhatsApp?`
+            },
+            
+            // Despedidas
+            'despedida': {
+                keywords: ['gracias', 'chau', 'adiós', 'adios', 'bye', 'nos vemos', 'hasta luego'],
+                response: `¡Gracias a vos por consultar! 😊
+
+Recordá que estoy acá para ayudarte con cualquier duda sobre digitalizar tu negocio.
+
+Si querés avanzar con alguna solución, te recomiendo continuar por WhatsApp para atención personalizada.
+
+¡Que tengas un excelente día!`
+            }
+        };
+        
+        // DETECTAR LA INTENCIÓN PRINCIPAL
+        let detectedIntent = null;
+        let maxMatches = 0;
+        
+        for (const [intent, data] of Object.entries(intentResponses)) {
+            let matches = 0;
+            data.keywords.forEach(keyword => {
+                if (lowerMessage.includes(keyword)) {
+                    matches++;
+                }
+            });
+            
+            if (matches > maxMatches) {
+                maxMatches = matches;
+                detectedIntent = intent;
+            }
         }
         
-        // Verificar si tenemos suficiente información para sugerir WhatsApp
-        const hasEnoughData = userData.businessType && 
-                             userData.interestedServices.length > 0 && 
-                             userData.mainGoal;
+        // GENERAR RESPUESTA BASADA EN LA INTENCIÓN
+        let response = '';
         
-        // Verificar si el mensaje sugiere continuar por WhatsApp
+        if (detectedIntent && maxMatches > 0) {
+            response = intentResponses[detectedIntent].response;
+            console.log(`🎯 Intención detectada: ${detectedIntent} (${maxMatches} coincidencias)`);
+        } else {
+            // RESPUESTA POR DEFECTO (cuando no se detecta intención clara)
+            response = `Entiendo. Para ayudarte mejor, contame:
+
+1. **¿Qué tipo de negocio tenés?** (ferretería, comercio, taller, etc.)
+2. **¿Cuál es tu principal desafío?**
+   - No tengo tiempo para atender consultas
+   - Quiero vender más pero no sé cómo
+   - No soy visible en redes/internet
+   - Mis procesos son muy manuales/lentos
+3. **¿Tenés preferencia por alguna solución?**
+   - Web catálogo
+   - Bot de WhatsApp
+   - Marketing en redes
+   - Publicidad digital
+   - Automatizaciones
+
+¡Así te puedo dar recomendaciones específicas para tu caso! 😊`;
+        }
+        
+        // DECIDIR SI MOSTRAR BOTÓN DE WHATSAPP
+        const hasBasicInfo = userData.businessType || userData.mainGoal || userData.interestedServices.length > 0;
         const wantsWhatsApp = lowerMessage.includes('whatsapp') || 
                              lowerMessage.includes('contacto') || 
                              lowerMessage.includes('hablar') ||
+                             lowerMessage.includes('asesor') ||
                              lowerMessage.includes('consultar') ||
-                             lowerMessage.includes('asesor');
+                             detectedIntent === 'whatsapp' ||
+                             detectedIntent === 'precio';
         
-        if (hasEnoughData || wantsWhatsApp) {
+        const showWhatsAppButton = (hasBasicInfo && wantsWhatsApp) || 
+                                  (userData.interestedServices.length >= 2) ||
+                                  (userData.businessType && userData.mainGoal);
+        
+        console.log(`📊 Decisión WhatsApp: ${showWhatsAppButton ? 'SI' : 'NO'} (Info: ${hasBasicInfo}, Quiere: ${wantsWhatsApp})`);
+        
+        if (showWhatsAppButton) {
+            // Agregar texto adicional si vamos a mostrar el botón
+            if (!response.includes('WhatsApp') && !response.includes('whatsapp')) {
+                response += '\n\n**¿Te gustaría que preparemos un plan personalizado y continuemos por WhatsApp?**';
+            }
             addMessageWithWhatsAppButton(response);
         } else {
-            // Respuesta normal sin botón de WhatsApp
             addMessage(response);
         }
         
@@ -505,30 +766,29 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         });
     });
     
-    // Configurar botones de WhatsApp en la página
-    if (finalWhatsAppBtn) {
-        // Ya tiene href directo en el HTML
-        finalWhatsAppBtn.addEventListener('click', function(e) {
-            console.log('Botón WhatsApp footer clickeado');
-            // Puedes agregar tracking aquí si es necesario
-        });
-    }
-    
-    if (heroWhatsAppBtn) {
-        // Ya tiene href directo en el HTML
-        heroWhatsAppBtn.addEventListener('click', function(e) {
-            console.log('Botón WhatsApp hero clickeado');
-            // Puedes agregar tracking aquí si es necesario
-        });
-    }
-    
-    // Configurar botones de WhatsApp en los servicios
+    // Configurar click en tarjetas de servicio para el chat
     document.querySelectorAll('.service-card').forEach(card => {
         card.addEventListener('click', function() {
-            const title = this.querySelector('h3')?.textContent || 'Servicio digital';
+            const title = this.querySelector('h3')?.textContent || 'este servicio';
             const price = this.querySelector('.price')?.textContent || '';
             
-            const message = `Hola, me interesa el servicio de ${title} ${price ? `(${price})` : ''}. ¿Podrían darme más información?`;
+            let message = '';
+            
+            if (title.includes('Bot de WhatsApp')) {
+                message = 'Me interesa el Bot de WhatsApp. ¿Podrían contarme más detalles de cómo funciona y los precios?';
+            } else if (title.includes('Web catálogo')) {
+                message = 'Quiero saber más sobre la Web catálogo para comercios. ¿Qué incluye exactamente?';
+            } else if (title.includes('redes sociales')) {
+                message = 'Me gustaría consultar sobre el manejo de redes sociales. ¿Qué contenido incluye?';
+            } else if (title.includes('Publicidad digital')) {
+                message = 'Quiero información sobre publicidad digital. ¿En qué redes trabajan y cuánto debo invertir?';
+            } else if (title.includes('Presupuestos automáticos')) {
+                message = 'Me interesa el sistema de presupuestos automáticos. ¿Cómo funciona con IA?';
+            } else if (title.includes('imágenes y videos')) {
+                message = 'Quiero saber sobre la creación de imágenes y videos profesionales para mi negocio.';
+            } else {
+                message = `Me interesa el servicio de ${title}. ¿Podrían darme más información?`;
+            }
             
             // Insertar en el chat
             if (userInput) {
@@ -540,12 +800,17 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
                 if (chatBody && chatBody.classList.contains('collapsed')) {
                     chatBody.classList.remove('collapsed');
                     if (chatToggle) {
-                        chatToggle.querySelector('i').classList.remove('fa-chevron-up');
-                        chatToggle.querySelector('i').classList.add('fa-chevron-down');
+                        chatToggle.querySelector('i').className = 'fas fa-chevron-down';
                     }
                 }
                 
                 userInput.focus();
+                
+                // Desplazar la vista al chat
+                document.querySelector('.chat-widget').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
             }
         });
     });
@@ -612,8 +877,7 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         if (chatBody && chatBody.classList.contains('collapsed')) {
             chatBody.classList.remove('collapsed');
             if (chatToggle) {
-                chatToggle.querySelector('i').classList.remove('fa-chevron-up');
-                chatToggle.querySelector('i').classList.add('fa-chevron-down');
+                chatToggle.querySelector('i').className = 'fas fa-chevron-down';
             }
         }
     });
@@ -627,5 +891,7 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         }
     });
     
-    console.log('✅ Sistema inicializado correctamente');
+    // Inicialización completa
+    console.log('✅ Sistema de chat inicializado correctamente');
+    console.log('💡 Tip: Escribe sobre tu negocio, problemas o preguntas sobre precios');
 });
