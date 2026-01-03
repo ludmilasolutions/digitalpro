@@ -1,23 +1,19 @@
 // script.js - Lógica principal del sitio y chat IA
-
 document.addEventListener('DOMContentLoaded', function() {
-    // ====================
-    // 1. CONFIGURACIÓN INICIAL
-    // ====================
-    
     console.log('🚀 Sistema cargado correctamente');
-    console.log('📡 Modo:', CONFIG.USE_SERVERLESS_ENDPOINT ? 'Serverless' : 'Directo');
     
-    // Elementos del DOM
+    // ===== ELEMENTOS DEL DOM =====
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
     const chatToggle = document.querySelector('.chat-toggle');
     const chatBody = document.querySelector('.chat-body');
+    const chatHeader = document.querySelector('.chat-header');
     const finalWhatsAppBtn = document.getElementById('finalWhatsAppBtn');
     const heroWhatsAppBtn = document.getElementById('heroWhatsAppBtn');
     
-    // Estado de la conversación
+    // ===== VARIABLES DE ESTADO =====
+    let chatInitialized = false;
     let conversationHistory = [];
     let userData = {
         businessType: '',
@@ -26,128 +22,110 @@ document.addEventListener('DOMContentLoaded', function() {
         mainGoal: ''
     };
     
-    // ====================
-    // 2. SYSTEM PROMPT DE GEMINI
-    // ====================
+    // ===== CONFIGURACIÓN =====
+    const CONFIG = {
+        CHAT: {
+            INITIAL_MESSAGE: '¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇',
+            MAX_HISTORY: 10
+        },
+        WHATSAPP_PHONE: '5491111111111', // Reemplazar con tu número real
+        USE_SERVERLESS_ENDPOINT: false,
+        GEMINI_API_KEY: ''
+    };
     
-    const systemPrompt = `Actuás como un asesor comercial digital para negocios locales en Argentina.
-
-Tu objetivo es:
-- Entender el negocio del cliente
-- Detectar problemas y oportunidades
-- Explicar servicios digitales de forma simple
-- Proponer soluciones claras y personalizadas
-- Dar precios estimativos en pesos argentinos
-- Preparar el cierre por WhatsApp
-
-Reglas obligatorias:
-- Usar español argentino
-- Lenguaje simple, directo y profesional
-- No usar tecnicismos
-- No prometer resultados irreales
-- No vender online ni cobrar dentro del chat
-- Siempre aclarar que los precios son estimativos
-- Derivar siempre a WhatsApp para confirmar y cerrar
-
-Comportamiento:
-- Guiar la conversación con preguntas cortas
-- Actuar como un vendedor humano profesional
-- No ser invasivo
-- Adaptarse a cualquier tipo de negocio
-- Ofrecer soluciones a medida si el cliente lo necesita
-
-Servicios disponibles:
-1. Web catálogo para comercios
-2. Bot de WhatsApp
-3. Presupuestos automáticos con IA
-4. Marketing digital (redes, imágenes, videos)
-5. Publicidad digital
-6. Automatizaciones a medida
-7. Otras soluciones digitales personalizadas
-
-Precios estimativos (MODIFICABLES EN config.js):
-- Web catálogo: desde $150.000
-- Bot de WhatsApp: desde $80.000 + $15.000/mes
-- Marketing mensual: desde $45.000 por mes
-- Publicidad digital: desde $30.000 + inversión en anuncios
-- Automatizaciones a medida: se cotizan según necesidad (desde $120.000)
-- Presupuestos automáticos: desde $60.000
-
-SIEMPRE ACLARAR: "El precio final depende del negocio y se confirma por WhatsApp"
-
-ANTES DE DERIVAR A WHATSAPP, DEBÉS:
-1. Preguntar qué servicios le interesan
-2. Preguntar tipo de negocio (ferretería, comercio, taller, etc.)
-3. Preguntar redes a trabajar (si aplica a marketing)
-4. Preguntar objetivo principal
-
-CUANDO TENGAS ESA INFORMACIÓN:
-- Armá un resumen claro y corto
-- Prepará el mensaje para WhatsApp con este formato EXACTO:
-
-Hola, quiero consultar por los siguientes servicios:
-- [servicio 1]
-- [servicio 2]
-
-Tipo de negocio: [tipo]
-Redes a trabajar: [redes o "no aplica"]
-Objetivo principal: [objetivo]
-
-- Invitá al usuario a continuar por WhatsApp con el mensaje prellenado
-
-Comportamiento conversacional:
-- Empezá preguntando por el tipo de negocio
-- Sé amable pero profesional
-- Usá emojis moderadamente (1-2 por mensaje)
-- Hacé preguntas específicas para entender necesidades
-- Ofrecé ejemplos concretos del rubro del cliente
-
-NO:
-- No des precios exactos, solo rangos estimativos
-- No aceptes pagos ni tomes datos de tarjetas
-- No des información de contacto alternativa
-- No prometas plazos exactos de implementación
-
-CONTEXTO ACTUAL:
-Fecha: ${new Date().toLocaleDateString('es-AR')}
-Cliente: Visitante web
-Origen: Landing page de soluciones digitales
-
-Ahora, iniciá la conversación con un saludo amable y preguntando por el negocio del cliente.`;
+    // ===== SISTEMA DE CHAT - CORREGIDO =====
     
-    // ====================
-    // 3. FUNCIONES DEL CHAT
-    // ====================
-    
-    // Ajustar altura del textarea automáticamente
-    function autoResizeTextarea() {
-        userInput.style.height = 'auto';
-        userInput.style.height = Math.min(userInput.scrollHeight, 100) + 'px';
+    // 1. Función para agregar mensaje inicial UNA SOLA VEZ
+    function addInitialMessage() {
+        if (!chatInitialized && chatMessages && chatMessages.children.length === 0) {
+            const initialMessage = document.createElement('div');
+            initialMessage.className = 'message ai';
+            initialMessage.innerHTML = `
+                <div class="message-content">
+                    <p>${CONFIG.CHAT.INITIAL_MESSAGE}</p>
+                </div>
+            `;
+            chatMessages.appendChild(initialMessage);
+            chatInitialized = true;
+            
+            // Agregar al historial
+            conversationHistory.push({
+                role: 'assistant',
+                content: CONFIG.CHAT.INITIAL_MESSAGE
+            });
+            
+            console.log('✅ Mensaje inicial agregado');
+        }
     }
     
-    userInput.addEventListener('input', autoResizeTextarea);
+    // 2. Inicializar chat
+    addInitialMessage();
     
-    // Toggle del chat (minimizar/maximizar)
-    chatToggle.addEventListener('click', function() {
-        const isVisible = chatBody.style.display !== 'none';
+    // 3. Toggle del chat - COMPLETAMENTE CORREGIDO
+    if (chatToggle && chatBody) {
+        chatToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Alternar clase 'collapsed'
+            chatBody.classList.toggle('collapsed');
+            
+            // Cambiar ícono
+            const icon = this.querySelector('i');
+            if (chatBody.classList.contains('collapsed')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                // Hacer scroll al final al abrir
+                setTimeout(scrollToBottom, 100);
+            }
+        });
         
-        if (isVisible) {
-            chatBody.style.display = 'none';
-            chatToggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
-        } else {
-            chatBody.style.display = 'flex';
-            chatToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
-            // Hacer scroll al final de los mensajes
-            setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 100);
+        // También permitir abrir/cerrar haciendo clic en el header
+        if (chatHeader) {
+            chatHeader.addEventListener('click', function(e) {
+                if (e.target !== chatToggle && !chatToggle.contains(e.target)) {
+                    chatToggle.click();
+                }
+            });
         }
-    });
+    }
     
-    // Agregar mensaje al chat
-    function addMessage(text, isUser = false) {
+    // 4. Auto-resize del textarea
+    if (userInput) {
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+        
+        // Enviar mensaje con Enter (sin Shift)
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+    }
+    
+    // 5. Botón de enviar
+    if (sendButton) {
+        sendButton.addEventListener('click', handleSendMessage);
+    }
+    
+    // 6. Función para hacer scroll al final
+    function scrollToBottom() {
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+    
+    // 7. Función para agregar mensaje
+    function addMessage(text, sender = 'ai') {
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+        messageDiv.className = `message ${sender}`;
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
@@ -159,22 +137,31 @@ Ahora, iniciá la conversación con un saludo amable y preguntando por el negoci
         messageDiv.appendChild(contentDiv);
         chatMessages.appendChild(messageDiv);
         
-        // Scroll al final
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Asegurar que el chat esté abierto
+        if (chatBody && chatBody.classList.contains('collapsed')) {
+            chatBody.classList.remove('collapsed');
+            if (chatToggle) {
+                chatToggle.querySelector('i').classList.remove('fa-chevron-up');
+                chatToggle.querySelector('i').classList.add('fa-chevron-down');
+            }
+        }
+        
+        // Hacer scroll al final
+        setTimeout(scrollToBottom, 50);
         
         // Agregar al historial
         conversationHistory.push({
-            role: isUser ? 'user' : 'assistant',
+            role: sender === 'user' ? 'user' : 'assistant',
             content: text
         });
         
-        // Limitar historial para no exceder tokens
+        // Limitar historial
         if (conversationHistory.length > CONFIG.CHAT.MAX_HISTORY) {
             conversationHistory = conversationHistory.slice(-CONFIG.CHAT.MAX_HISTORY);
         }
     }
     
-    // Extraer datos del usuario de la conversación
+    // 8. Extraer datos del usuario de la conversación
     function extractUserDataFromMessage(message) {
         const lowerMsg = message.toLowerCase();
         
@@ -232,9 +219,11 @@ Ahora, iniciá la conversación con un saludo amable y preguntando por el negoci
         } else if (lowerMsg.includes('organizar') || lowerMsg.includes('orden')) {
             userData.mainGoal = 'Organizar mejor el negocio';
         }
+        
+        console.log('📊 Datos del usuario actualizados:', userData);
     }
     
-    // Generar resumen para WhatsApp
+    // 9. Generar resumen para WhatsApp
     function generateWhatsAppSummary() {
         const serviceMap = {
             'web': 'Web catálogo',
@@ -257,16 +246,7 @@ Redes a trabajar: ${userData.networks || 'Por definir'}
 Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
     }
     
-    // Crear link de WhatsApp con mensaje prellenado
-    function createWhatsAppLink() {
-        const summary = generateWhatsAppSummary();
-        const encodedMessage = encodeURIComponent(summary);
-        const phoneNumber = CONFIG.WHATSAPP_PHONE;
-        
-        return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    }
-    
-    // Función auxiliar para agregar mensaje con botón de WhatsApp
+    // 10. Función para agregar mensaje con botón de WhatsApp
     function addMessageWithWhatsAppButton(messageText) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message ai';
@@ -278,16 +258,45 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         // Crear botón de WhatsApp
         const whatsappBtn = document.createElement('button');
         whatsappBtn.className = 'btn btn-primary whatsapp-action-btn';
-        whatsappBtn.style.marginTop = '15px';
-        whatsappBtn.style.width = '100%';
-        whatsappBtn.style.padding = '12px';
+        whatsappBtn.style.cssText = `
+            margin-top: 15px;
+            width: 100%;
+            padding: 12px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        `;
+        
         whatsappBtn.innerHTML = `
-            <i class="fab fa-whatsapp"></i> 
-            <strong>Continuar por WhatsApp</strong>
-            <small style="display: block; font-weight: normal; margin-top: 5px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fab fa-whatsapp"></i> 
+                <strong>Continuar por WhatsApp</strong>
+            </div>
+            <small style="font-weight: normal; font-size: 12px; opacity: 0.9;">
                 Te llevamos con toda la información que conversamos
             </small>
         `;
+        
+        whatsappBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 5px 15px rgba(37, 211, 102, 0.3)';
+        });
+        
+        whatsappBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
         
         whatsappBtn.addEventListener('click', function() {
             const summary = generateWhatsAppSummary();
@@ -302,6 +311,8 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
             // Deshabilitar botón
             whatsappBtn.disabled = true;
             whatsappBtn.innerHTML = '<i class="fab fa-whatsapp"></i> ¡WhatsApp abierto!';
+            whatsappBtn.style.opacity = '0.7';
+            whatsappBtn.style.cursor = 'default';
         });
         
         contentDiv.appendChild(whatsappBtn);
@@ -309,7 +320,7 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         chatMessages.appendChild(messageDiv);
         
         // Scroll al final
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        setTimeout(scrollToBottom, 50);
         
         // Agregar al historial
         conversationHistory.push({
@@ -318,174 +329,160 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
         });
     }
     
-    // Enviar mensaje a Gemini API
-    async function sendToGemini(userMessage) {
-        try {
-            // Mostrar indicador de "escribiendo"
-            const typingIndicator = document.createElement('div');
-            typingIndicator.className = 'message ai typing';
-            typingIndicator.innerHTML = '<div class="message-content"><p><i class="fas fa-ellipsis-h"></i> Escribiendo...</p></div>';
-            chatMessages.appendChild(typingIndicator);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Extraer datos del mensaje del usuario
-            extractUserDataFromMessage(userMessage);
-            
-            // Preparar mensajes para la API
-            const messages = [
-                {
-                    role: "user",
-                    parts: [{ text: systemPrompt }]
-                },
-                ...conversationHistory.map(msg => ({
-                    role: msg.role === 'user' ? "user" : "model",
-                    parts: [{ text: msg.content }]
-                })),
-                {
-                    role: "user",
-                    parts: [{ text: userMessage }]
-                }
-            ];
-            
-            // CONSTRUIR LA URL CORRECTAMENTE
-            let endpoint;
-            
-            if (CONFIG.USE_SERVERLESS_ENDPOINT) {
-                // Para Netlify: ruta relativa que se convierte en absoluta
-                endpoint = window.location.origin + CONFIG.SERVERLESS_ENDPOINT;
-                
-                // Debug: mostrar la URL que se está usando
-                console.log('🌐 Enviando a:', endpoint);
-            } else {
-                // Modo desarrollo directo (no recomendado)
-                endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
-            }
-            
-            // Hacer la solicitud
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    messages: messages,
-                    userData: userData
-                })
-            });
-            
-            // Verificar respuesta
-            if (!response.ok) {
-                // Intentar obtener más información del error
-                let errorDetail = `Error ${response.status}: ${response.statusText}`;
-                try {
-                    const errorData = await response.json();
-                    errorDetail = JSON.stringify(errorData);
-                } catch (e) {
-                    // Si no se puede parsear JSON, usar texto
-                    const errorText = await response.text();
-                    if (errorText) errorDetail = errorText;
-                }
-                
-                throw new Error(errorDetail);
-            }
-            
-            const data = await response.json();
-            
-            // Remover indicador de "escribiendo"
-            chatMessages.removeChild(typingIndicator);
-            
-            // Procesar respuesta
-            const aiResponse = data.text;
-            
-            // Verificar si debemos mostrar botón de WhatsApp
-            const lowerResponse = aiResponse.toLowerCase();
-            const hasEnoughData = userData.businessType && 
-                                 userData.interestedServices.length > 0 && 
-                                 userData.mainGoal;
-            
-            if (hasEnoughData && (lowerResponse.includes('whatsapp') || lowerResponse.includes('resumen'))) {
-                // Crear mensaje con botón de WhatsApp
-                addMessageWithWhatsAppButton(aiResponse);
-            } else {
-                // Respuesta normal
-                addMessage(aiResponse);
-            }
-            
-            // Actualizar userData si viene del servidor
-            if (data.userData) {
-                userData = { ...userData, ...data.userData };
-            }
-            
-        } catch (error) {
-            console.error('❌ Error con Gemini API:', error);
-            
-            // Remover indicador de "escribiendo"
-            const typingIndicator = document.querySelector('.typing');
-            if (typingIndicator) {
-                chatMessages.removeChild(typingIndicator);
-            }
-            
-            // Mensaje de error amigable con opción alternativa
-            const errorMessage = `
-                <p>Disculpá, hubo un error técnico momentáneo. 😅</p>
-                <p>Te sugiero que directamente me cuentes:</p>
-                <ul>
-                    <li>¿Qué tipo de negocio tenés?</li>
-                    <li>¿Qué es lo que más te gustaría mejorar?</li>
-                    <li>¿Tenés preferencia por algún servicio en particular?</li>
-                </ul>
-                <p>O si preferís, podés contactarnos directamente por WhatsApp 👇</p>
-                <button class="btn btn-primary whatsapp-fallback-btn" style="margin-top: 10px; width: 100%;">
-                    <i class="fab fa-whatsapp"></i> Hablar por WhatsApp ahora
-                </button>
-            `;
-            
-            addMessage(errorMessage);
-            
-            // Configurar botón de WhatsApp de respaldo
-            setTimeout(() => {
-                const whatsappBtn = document.querySelector('.whatsapp-fallback-btn');
-                if (whatsappBtn) {
-                    whatsappBtn.addEventListener('click', function() {
-                        const defaultMessage = `Hola, quiero consultar por soluciones digitales para mi negocio.`;
-                        const encodedMessage = encodeURIComponent(defaultMessage);
-                        window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${encodedMessage}`, '_blank');
-                    });
-                }
-            }, 100);
-        }
-    }
-    
-    // Manejar envío de mensaje
+    // 11. Función para enviar mensaje
     function handleSendMessage() {
-        const message = userInput.value.trim();
+        if (!userInput || !chatMessages) return;
         
+        const message = userInput.value.trim();
         if (!message) return;
         
         // Agregar mensaje del usuario
-        addMessage(message, true);
+        addMessage(message, 'user');
+        
+        // Extraer datos del usuario
+        extractUserDataFromMessage(message);
         
         // Limpiar input
         userInput.value = '';
-        autoResizeTextarea();
+        userInput.style.height = 'auto';
         
-        // Enviar a Gemini
-        sendToGemini(message);
+        // Mostrar indicador de "escribiendo"
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'message ai typing';
+        typingIndicator.innerHTML = '<div class="message-content"><p><i class="fas fa-ellipsis-h"></i> Escribiendo...</p></div>';
+        chatMessages.appendChild(typingIndicator);
+        scrollToBottom();
+        
+        // Simular respuesta de IA después de un delay
+        setTimeout(() => {
+            // Remover indicador
+            if (typingIndicator.parentNode === chatMessages) {
+                chatMessages.removeChild(typingIndicator);
+            }
+            
+            // Generar respuesta basada en el mensaje del usuario
+            getAIResponse(message);
+        }, 1500);
     }
     
-    // Event listeners
-    sendButton.addEventListener('click', handleSendMessage);
-    
-    userInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
+    // 12. Respuestas automáticas de IA
+    function getAIResponse(userMessage) {
+        let response = '';
+        const lowerMessage = userMessage.toLowerCase();
+        
+        // SYSTEM PROMPT
+        const systemPrompt = `Eres un asesor comercial digital para negocios locales en Argentina.
+        
+        Tu objetivo es entender el negocio del cliente y recomendar soluciones digitales.
+        
+        Servicios disponibles:
+        1. Web catálogo para comercios
+        2. Bot de WhatsApp
+        3. Presupuestos automáticos con IA
+        4. Marketing digital (redes, imágenes, videos)
+        5. Publicidad digital
+        6. Automatizaciones a medida
+        
+        Precios estimativos:
+        - Web catálogo: desde $150.000
+        - Bot de WhatsApp: desde $80.000 + $15.000/mes
+        - Marketing mensual: desde $45.000 por mes
+        - Publicidad digital: desde $30.000 + inversión en anuncios
+        - Automatizaciones a medida: desde $120.000
+        - Presupuestos automáticos: desde $60.000
+        
+        Siempre aclarar que los precios son estimativos y se confirman por WhatsApp.`;
+        
+        // Lógica de respuestas contextuales
+        if (lowerMessage.includes('precio') || lowerMessage.includes('cuesta') || lowerMessage.includes('costo')) {
+            response = 'Los precios varían según las soluciones. Te puedo dar una estimación:\n\n' +
+                      '• Bot de WhatsApp: desde $80.000 + $15.000/mes\n' +
+                      '• Web catálogo: desde $150.000\n' +
+                      '• Redes sociales: desde $45.000/mes\n' +
+                      '• Publicidad digital: desde $30.000 + inversión en anuncios\n' +
+                      '• Automatizaciones a medida: desde $120.000\n' +
+                      '• Presupuestos automáticos: desde $60.000\n\n' +
+                      '¿Te interesa alguna en particular?';
+                      
+        } else if (lowerMessage.includes('hola') || lowerMessage.includes('buenas') || lowerMessage.includes('buenos')) {
+            response = '¡Hola! 😊 Soy tu asesor digital. ¿Qué tipo de negocio tenés?';
+            
+        } else if (lowerMessage.includes('ferretería') || lowerMsg.includes('ferreteria') || 
+                   lowerMessage.includes('comercio') || lowerMessage.includes('negocio') || 
+                   lowerMessage.includes('taller') || lowerMessage.includes('tienda')) {
+            response = '¡Perfecto! Trabajamos especialmente con negocios locales como el tuyo. ¿Qué es lo que más te gustaría mejorar o automatizar?';
+            
+        } else if (lowerMessage.includes('redes') || lowerMessage.includes('instagram') || lowerMessage.includes('facebook')) {
+            response = 'El manejo de redes sociales es clave hoy en día. Incluye contenido semanal:\n\n' +
+                      '• Primera semana: 3 imágenes + 1 video\n' +
+                      '• Semanas siguientes: 2 videos + 4 imágenes por semana\n\n' +
+                      'Todo optimizado para tu negocio. ¿Te gustaría saber más?';
+                      
+        } else if (lowerMessage.includes('whatsapp') || lowerMessage.includes('bot')) {
+            response = 'El bot de WhatsApp es una gran solución. Atiende automáticamente 24/7 y puede:\n\n' +
+                      '• Responder consultas frecuentes\n' +
+                      '• Enviar presupuestos automáticos\n' +
+                      '• Confirmar pedidos\n' +
+                      '• Derivar a un humano si es necesario\n\n' +
+                      '¿Te gustaría que te cuente más detalles?';
+                      
+        } else if (lowerMessage.includes('web') || lowerMessage.includes('página') || lowerMessage.includes('pagina') || lowerMessage.includes('sitio')) {
+            response = 'La web catálogo es perfecta para mostrar tus productos online. No es una tienda (no vende online), pero sirve para que los clientes:\n\n' +
+                      '• Vean tus productos y precios\n' +
+                      '• Te contacten directamente\n' +
+                      '• Reciban atención 24/7\n\n' +
+                      'Se hace a medida para tu negocio. ¿Te interesa?';
+                      
+        } else if (lowerMessage.includes('tiempo') || lowerMessage.includes('ocupado') || lowerMessage.includes('mucho trabajo')) {
+            response = 'Entiendo, el tiempo es oro. Por eso nuestras soluciones te ayudan a:\n\n' +
+                      '• Automatizar consultas y presupuestos\n' +
+                      '• Reducir tareas manuales hasta un 70%\n' +
+                      '• Atender más clientes en menos tiempo\n\n' +
+                      '¿Qué tarea te consume más tiempo actualmente?';
+                      
+        } else if (lowerMessage.includes('vender') || lowerMessage.includes('ventas') || lowerMessage.includes('clientes')) {
+            response = '¡Excelente enfoque! Para vender más podemos trabajar en:\n\n' +
+                      '1. Más visibilidad (redes + publicidad)\n' +
+                      '2. Mejor atención (bots 24/7)\n' +
+                      '3. Seguimiento automatizado\n' +
+                      '4. Catálogo online accesible\n\n' +
+                      '¿Por dónde te gustaría empezar?';
+                      
+        } else if (lowerMessage.includes('gracias') || lowerMessage.includes('gracias')) {
+            response = '¡De nada! 😊 Mi trabajo es ayudarte a encontrar la mejor solución para tu negocio. ¿Hay algo más en lo que te pueda ayudar?';
+            
+        } else {
+            // Respuesta por defecto
+            response = 'Entiendo. Para recomendarte la mejor solución, contame:\n\n' +
+                      '1. ¿Qué tipo de negocio tenés? (ferretería, comercio, taller, etc.)\n' +
+                      '2. ¿Cuál es tu principal desafío? (tiempo, ventas, visibilidad, etc.)\n' +
+                      '3. ¿Tenés preferencia por alguna solución digital?\n\n' +
+                      'Así te puedo orientar mejor 👍';
         }
-    });
+        
+        // Verificar si tenemos suficiente información para sugerir WhatsApp
+        const hasEnoughData = userData.businessType && 
+                             userData.interestedServices.length > 0 && 
+                             userData.mainGoal;
+        
+        // Verificar si el mensaje sugiere continuar por WhatsApp
+        const wantsWhatsApp = lowerMessage.includes('whatsapp') || 
+                             lowerMessage.includes('contacto') || 
+                             lowerMessage.includes('hablar') ||
+                             lowerMessage.includes('consultar') ||
+                             lowerMessage.includes('asesor');
+        
+        if (hasEnoughData || wantsWhatsApp) {
+            addMessageWithWhatsAppButton(response);
+        } else {
+            // Respuesta normal sin botón de WhatsApp
+            addMessage(response);
+        }
+        
+        scrollToBottom();
+    }
     
-    // ====================
-    // 4. FUNCIONALIDADES DE LA LANDING PAGE
-    // ====================
+    // ===== FUNCIONALIDADES DE LA LANDING PAGE =====
     
     // Tabs de servicios
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -501,73 +498,134 @@ Objetivo principal: ${userData.mainGoal || 'Por definir'}`;
             
             // Agregar active al seleccionado
             this.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
         });
     });
     
-    // Configurar botones de WhatsApp
-    function setupWhatsAppButton(button, message) {
-        if (button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                const encodedMessage = encodeURIComponent(message);
-                window.open(`https://wa.me/${CONFIG.WHATSAPP_PHONE}?text=${encodedMessage}`, '_blank');
-            });
-        }
+    // Configurar botones de WhatsApp en la página
+    if (finalWhatsAppBtn) {
+        // Ya tiene href directo en el HTML
+        finalWhatsAppBtn.addEventListener('click', function(e) {
+            console.log('Botón WhatsApp footer clickeado');
+            // Puedes agregar tracking aquí si es necesario
+        });
     }
     
-    // Configurar botones de WhatsApp en la página
-    setupWhatsAppButton(finalWhatsAppBtn, 'Hola, vi su página y quiero consultar por soluciones digitales para mi negocio.');
-    setupWhatsAppButton(heroWhatsAppBtn, 'Hola, quiero consultar por soluciones digitales para mi negocio.');
+    if (heroWhatsAppBtn) {
+        // Ya tiene href directo en el HTML
+        heroWhatsAppBtn.addEventListener('click', function(e) {
+            console.log('Botón WhatsApp hero clickeado');
+            // Puedes agregar tracking aquí si es necesario
+        });
+    }
     
     // Configurar botones de WhatsApp en los servicios
     document.querySelectorAll('.service-card').forEach(card => {
-        const title = card.querySelector('h3')?.textContent || 'Servicio digital';
-        const price = card.querySelector('.price')?.textContent || '';
-        
         card.addEventListener('click', function() {
+            const title = this.querySelector('h3')?.textContent || 'Servicio digital';
+            const price = this.querySelector('.price')?.textContent || '';
+            
             const message = `Hola, me interesa el servicio de ${title} ${price ? `(${price})` : ''}. ¿Podrían darme más información?`;
-            userInput.value = message;
-            autoResizeTextarea();
             
-            // Hacer foco en el chat si está minimizado
-            if (chatBody.style.display === 'none') {
-                chatBody.style.display = 'flex';
-                chatToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            // Insertar en el chat
+            if (userInput) {
+                userInput.value = message;
+                userInput.style.height = 'auto';
+                userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+                
+                // Hacer foco en el chat si está minimizado
+                if (chatBody && chatBody.classList.contains('collapsed')) {
+                    chatBody.classList.remove('collapsed');
+                    if (chatToggle) {
+                        chatToggle.querySelector('i').classList.remove('fa-chevron-up');
+                        chatToggle.querySelector('i').classList.add('fa-chevron-down');
+                    }
+                }
+                
+                userInput.focus();
             }
-            
-            userInput.focus();
         });
     });
     
-    // Animación de aparición de elementos al hacer scroll
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
+    // Menú móvil
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mainNav = document.querySelector('.main-nav');
     
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animated');
+    if (mobileMenuBtn && mainNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mainNav.classList.toggle('active');
+            this.setAttribute('aria-expanded', mainNav.classList.contains('active'));
+        });
+        
+        // Cerrar menú al hacer clic en un enlace
+        document.querySelectorAll('.main-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('active');
+                if (mobileMenuBtn) {
+                    mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+    }
+    
+    // Scroll suave
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href === '#' || href === '#!') return;
+            
+            const targetElement = document.querySelector(href);
+            if (targetElement) {
+                e.preventDefault();
+                const headerHeight = document.querySelector('.main-header')?.offsetHeight || 70;
+                const targetPosition = targetElement.offsetTop - headerHeight;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+                
+                // Cerrar menú móvil si está abierto
+                if (mainNav && mainNav.classList.contains('active')) {
+                    mainNav.classList.remove('active');
+                    if (mobileMenuBtn) {
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
             }
         });
-    }, observerOptions);
-    
-    // Observar elementos para animación
-    document.querySelectorAll('.problem-card, .service-card, .benefit-card, .step').forEach(el => {
-        observer.observe(el);
     });
     
-    // ====================
-    // 5. INICIALIZACIÓN DEL CHAT
-    // ====================
+    // Prevenir logos grandes
+    window.addEventListener('load', function() {
+        const logos = document.querySelectorAll('img[src*="logo"]');
+        logos.forEach(logo => {
+            logo.style.objectFit = 'contain';
+            logo.style.maxWidth = '100%';
+            logo.style.maxHeight = '100%';
+        });
+        
+        // Asegurar que el chat esté abierto al cargar
+        if (chatBody && chatBody.classList.contains('collapsed')) {
+            chatBody.classList.remove('collapsed');
+            if (chatToggle) {
+                chatToggle.querySelector('i').classList.remove('fa-chevron-up');
+                chatToggle.querySelector('i').classList.add('fa-chevron-down');
+            }
+        }
+    });
     
-    // Agregar mensaje inicial del asistente
-    setTimeout(() => {
-        addMessage(CONFIG.CHAT.INITIAL_MESSAGE);
-    }, 1000);
+    // Manejar redimensionamiento de ventana
+    window.addEventListener('resize', function() {
+        // Reajustar altura del textarea
+        if (userInput) {
+            userInput.style.height = 'auto';
+            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+        }
+    });
     
     console.log('✅ Sistema inicializado correctamente');
 });
