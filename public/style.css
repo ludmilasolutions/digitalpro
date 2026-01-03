@@ -1,4 +1,4 @@
-/* Reset y estilos base */
+/* ===== RESET Y ESTILOS BASE ===== */
 * {
     margin: 0;
     padding: 0;
@@ -120,7 +120,7 @@ body {
     padding: 5px;
 }
 
-/* ===== CHAT WIDGET ===== */
+/* ===== CHAT WIDGET - COMPLETAMENTE CORREGIDO ===== */
 .chat-widget {
     position: fixed;
     bottom: 20px;
@@ -131,7 +131,6 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     z-index: 999;
     overflow: hidden;
-    transition: all 0.3s ease;
 }
 
 .chat-header {
@@ -142,6 +141,7 @@ body {
     color: white;
     gap: 10px;
     cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .chat-avatar {
@@ -195,27 +195,39 @@ body {
     font-size: 16px;
     padding: 5px;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
+.chat-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* ESTILO CORREGIDO PARA EL CHAT BODY */
 .chat-body {
     max-height: 400px;
-    transition: all 0.3s ease;
+    transition: max-height 0.3s ease;
     overflow: hidden;
 }
 
 .chat-body.collapsed {
     max-height: 0;
-    padding: 0;
 }
 
 .chat-messages {
     padding: 15px;
     max-height: 300px;
     overflow-y: auto;
+    min-height: 100px;
 }
 
 .message {
     margin-bottom: 15px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .message-content {
@@ -223,6 +235,7 @@ body {
     padding: 12px 15px;
     border-radius: 10px;
     max-width: 85%;
+    word-wrap: break-word;
 }
 
 .message.ai .message-content {
@@ -236,6 +249,7 @@ body {
     display: flex;
     gap: 10px;
     align-items: flex-end;
+    background: white;
 }
 
 .chat-input-area textarea {
@@ -249,6 +263,12 @@ body {
     min-height: 40px;
     max-height: 120px;
     overflow-y: auto;
+    transition: border-color 0.3s;
+}
+
+.chat-input-area textarea:focus {
+    outline: none;
+    border-color: #6675FF;
 }
 
 .chat-input-area button {
@@ -263,6 +283,11 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    transition: background 0.3s;
+}
+
+.chat-input-area button:hover {
+    background: #1da851;
 }
 
 .chat-disclaimer {
@@ -929,6 +954,10 @@ footer {
     
     .placeholder-title {
         font-size: 24px;
+    }
+    
+    .chat-widget {
+        width: 320px;
     }
 }
 
