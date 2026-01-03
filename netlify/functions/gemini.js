@@ -1,7 +1,7 @@
 // netlify/functions/gemini.js - VERSIÓN SEGURA
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': 'https://digitalproduction.netlify.app',
+    'Access-Control-Allow-Origin': 'https://digitalrosario.netlify.app',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
@@ -9,7 +9,7 @@ exports.handler = async (event) => {
   // Validar origen (seguridad adicional)
   const origin = event.headers.origin || event.headers.Origin;
   const allowedOrigins = [
-    'https://digitalproduction.netlify.app',
+    'https://digitalrosario.netlify.app',
     'http://localhost:8888',
     'http://localhost:3000'
   ];
