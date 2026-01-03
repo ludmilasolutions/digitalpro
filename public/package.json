@@ -1,7 +1,7 @@
 {
   "name": "digitalrosario",
   "version": "1.0.0",
-  "description": "Sitio web con IA para negocios de Rosario",
+  "description": "Sitio con IA para negocios de Rosario",
   "main": "index.html",
   "dependencies": {
     "node-fetch": "^2.6.7"
@@ -10,6 +10,6 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-    "test": "echo \"No tests specified\" && exit 0"
+    "build": "echo 'No build step required'"
   }
 }
