@@ -14,15 +14,6 @@
     <!-- Favicon & Logo -->
     <link rel="icon" type="image/x-icon" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
-    
-    <style>
-        /* Estilos mínimos para evitar problemas de carga */
-        .logo-img, .placeholder-logo {
-            max-width: 100%;
-            height: auto;
-            object-fit: contain;
-        }
-    </style>
 </head>
 <body>
     <!-- Header con Logo -->
@@ -30,7 +21,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="#" class="logo-container">
-                    <img src="logo.png" alt="Soluciones Digitales para Negocios Locales" class="logo-img" onerror="this.style.display='none'">
+                    <img src="logo.png" alt="Soluciones Digitales para Negocios Locales" class="logo-img">
                     <div class="logo-text">
                         <span class="logo-main">Soluciones Digitales</span>
                         <span class="logo-sub">Para Negocios Locales</span>
@@ -52,7 +43,7 @@
         </div>
     </header>
 
-    <!-- Chat IA Flotante - SIMPLIFICADO Y CORREGIDO -->
+    <!-- Chat IA Flotante -->
     <div class="chat-widget" id="chatWidget">
         <div class="chat-header" id="chatHeader">
             <div class="chat-avatar">
@@ -68,7 +59,7 @@
         </div>
         <div class="chat-body" id="chatBody">
             <div class="chat-messages" id="chatMessages">
-                <!-- El mensaje se agregará por JavaScript -->
+                <!-- Los mensajes se agregarán dinámicamente -->
             </div>
             <div class="chat-input-area">
                 <textarea id="userInput" placeholder="Escribí tu mensaje..." rows="1"></textarea>
@@ -91,7 +82,7 @@
                     <h1>No pierdas ni una venta más por <span class="highlight">falta de tiempo o tecnología</span></h1>
                     <p class="hero-subtitle">Automatizamos tu negocio, manejamos tus redes y creamos herramientas digitales a medida. Más ventas, menos trabajo.</p>
                     <div class="hero-cta">
-                        <a href="#contact" class="btn btn-primary">
+                        <a href="https://wa.me/5491111111111?text=Hola!%20Vi%20su%20página%20web%20y%20me%20interesa%20conocer%20más%20sobre%20sus%20soluciones%20digitales%20para%20mi%20negocio." class="btn btn-primary" target="_blank" id="heroWhatsAppBtn">
                             <i class="fab fa-whatsapp"></i> Consultá gratis por WhatsApp
                         </a>
                         <a href="#services" class="btn btn-secondary">
@@ -116,7 +107,7 @@
                 <div class="hero-image">
                     <div class="hero-image-placeholder">
                         <div class="placeholder-content">
-                            <img src="logo.png" alt="Logo Soluciones Digitales" class="placeholder-logo" onerror="this.style.display='none'">
+                            <img src="logo.png" alt="Logo Soluciones Digitales" class="placeholder-logo">
                             <h3 class="placeholder-title">Tu negocio digitalizado</h3>
                             <p class="placeholder-subtitle">Con herramientas diseñadas específicamente para comercios locales</p>
                         </div>
@@ -369,7 +360,7 @@
             <div class="cta-box">
                 <h2>¿Listo para digitalizar tu negocio?</h2>
                 <p class="cta-subtitle">Hablá ahora con nuestro equipo por WhatsApp. Sin compromiso, te asesoramos en minutos.</p>
-                <a href="https://wa.me/5493417558966?text=Hola!%20Vi%20su%20página%20web%20y%20me%20interesa%20conocer%20más%20sobre%20sus%20soluciones%20digitales%20para%20mi%20negocio." 
+                <a href="https://wa.me/5491111111111?text=Hola!%20Vi%20su%20página%20web%20y%20me%20interesa%20conocer%20más%20sobre%20sus%20soluciones%20digitales%20para%20mi%20negocio." 
                    class="btn btn-whatsapp" id="finalWhatsAppBtn" target="_blank">
                     <i class="fab fa-whatsapp"></i> 
                     <div class="cta-text">
@@ -390,7 +381,7 @@
             <div class="footer-content">
                 <div class="footer-logo">
                     <div class="logo-container">
-                        <img src="logo.png" alt="Logo Soluciones Digitales" class="logo-img" onerror="this.style.display='none'">
+                        <img src="logo.png" alt="Logo Soluciones Digitales" class="logo-img">
                         <div class="logo-text">
                             <span class="logo-main">Soluciones Digitales</span>
                             <span class="logo-sub">Para Negocios Locales</span>
@@ -398,251 +389,17 @@
                     </div>
                 </div>
                 <div class="footer-info">
-                    <p>© 2024 Soluciones Digitales. Hecho en Argentina.</p>
+                    <p>© 2024 Soluciones Digitales para Negocios Locales. Hecho en Argentina.</p>
                     <p class="footer-contact">
                         <i class="fab fa-whatsapp"></i> Solo contacto por WhatsApp | 
-                        <i class="fas fa-map-marker-alt"></i> Para todo tipo de negocios.
+                        <i class="fas fa-map-marker-alt"></i> Para ferreterías, comercios, talleres, pymes
                     </p>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- JavaScript simplificado y directo -->
-    <script>
-        // ===== INICIALIZACIÓN SIMPLIFICADA =====
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Sitio cargado correctamente');
-            
-            // ===== MENÚ MÓVIL =====
-            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-            const mainNav = document.querySelector('.main-nav');
-            
-            if (mobileMenuBtn && mainNav) {
-                mobileMenuBtn.addEventListener('click', function() {
-                    mainNav.classList.toggle('active');
-                });
-                
-                // Cerrar menú al hacer clic en un enlace
-                document.querySelectorAll('.main-nav a').forEach(link => {
-                    link.addEventListener('click', () => {
-                        mainNav.classList.remove('active');
-                    });
-                });
-            }
-            
-            // ===== CHAT SIMPLIFICADO Y CORREGIDO =====
-            const chatToggle = document.getElementById('chatToggle');
-            const chatBody = document.getElementById('chatBody');
-            const chatMessages = document.getElementById('chatMessages');
-            const userInput = document.getElementById('userInput');
-            const sendButton = document.getElementById('sendButton');
-            
-            // Estado del chat
-            let chatInitialized = false;
-            
-            // Función para agregar mensaje inicial UNA SOLA VEZ
-            function addInitialMessage() {
-                if (!chatInitialized && chatMessages && chatMessages.children.length === 0) {
-                    const initialMessage = document.createElement('div');
-                    initialMessage.className = 'message ai';
-                    initialMessage.innerHTML = `
-                        <div class="message-content">
-                            <p>¡Hola! Soy tu asesor digital. <strong>Contame un poco de tu negocio</strong> y te digo cómo podemos ayudarte 👇</p>
-                        </div>
-                    `;
-                    chatMessages.appendChild(initialMessage);
-                    chatInitialized = true;
-                    console.log('Mensaje inicial agregado');
-                }
-            }
-            
-            // Inicializar chat al cargar la página
-            addInitialMessage();
-            
-            // Toggle del chat - CORREGIDO Y SIMPLIFICADO
-            if (chatToggle && chatBody) {
-                chatToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    
-                    // Alternar estado
-                    const isCollapsed = chatBody.classList.contains('collapsed');
-                    
-                    if (isCollapsed) {
-                        // Expandir
-                        chatBody.classList.remove('collapsed');
-                        this.querySelector('i').className = 'fas fa-chevron-down';
-                    } else {
-                        // Colapsar
-                        chatBody.classList.add('collapsed');
-                        this.querySelector('i').className = 'fas fa-chevron-up';
-                    }
-                });
-                
-                // También permitir abrir/cerrar haciendo clic en el header (excepto en el botón)
-                document.getElementById('chatHeader').addEventListener('click', function(e) {
-                    if (e.target !== chatToggle && !chatToggle.contains(e.target)) {
-                        chatToggle.click();
-                    }
-                });
-            }
-            
-            // Auto-resize del textarea
-            if (userInput) {
-                userInput.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                });
-                
-                // Enviar mensaje con Enter (sin Shift)
-                userInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                });
-            }
-            
-            // Botón de enviar
-            if (sendButton) {
-                sendButton.addEventListener('click', sendMessage);
-            }
-            
-            // Función para enviar mensaje
-            function sendMessage() {
-                if (!userInput || !chatMessages) return;
-                
-                const message = userInput.value.trim();
-                if (!message) return;
-                
-                // Agregar mensaje del usuario
-                addMessage(message, 'user');
-                
-                // Limpiar input
-                userInput.value = '';
-                userInput.style.height = 'auto';
-                
-                // Desplazar al final
-                scrollToBottom();
-                
-                // Simular respuesta automática después de un delay
-                setTimeout(() => {
-                    getAIResponse(message);
-                }, 1000);
-            }
-            
-            // Función para agregar mensaje
-            function addMessage(text, sender) {
-                if (!chatMessages) return;
-                
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${sender}`;
-                messageDiv.innerHTML = `
-                    <div class="message-content">
-                        <p>${text}</p>
-                    </div>
-                `;
-                
-                chatMessages.appendChild(messageDiv);
-                
-                // Asegurar que el chat esté abierto
-                if (chatBody && chatBody.classList.contains('collapsed')) {
-                    chatBody.classList.remove('collapsed');
-                    chatToggle.querySelector('i').className = 'fas fa-chevron-down';
-                }
-                
-                scrollToBottom();
-            }
-            
-            // Función para hacer scroll al final
-            function scrollToBottom() {
-                if (chatMessages) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-            }
-            
-            // Respuestas automáticas de IA (simplificadas)
-            function getAIResponse(userMessage) {
-                let response = '';
-                const lowerMessage = userMessage.toLowerCase();
-                
-                if (lowerMessage.includes('precio') || lowerMessage.includes('cuesta') || lowerMessage.includes('costo')) {
-                    response = 'Los precios varían según las soluciones. Te puedo dar una estimación:\n\n• Bot de WhatsApp: desde $80.000 + $15.000/mes\n• Web catálogo: desde $150.000\n• Redes sociales: desde $45.000/mes\n\n¿Te interesa alguna en particular?';
-                } else if (lowerMessage.includes('ferretería') || lowerMessage.includes('comercio') || lowerMessage.includes('negocio')) {
-                    response = '¡Perfecto! Trabajamos especialmente con ferreterías y comercios. Podemos automatizar consultas de stock, presupuestos automáticos, manejo de redes sociales y más. ¿Qué tipo de negocio tenés?';
-                } else if (lowerMessage.includes('redes') || lowerMessage.includes('instagram') || lowerMessage.includes('facebook')) {
-                    response = 'El manejo de redes sociales incluye contenido semanal:\n\n• Primera semana: 3 imágenes + 1 video\n• Semanas siguientes: 2 videos + 4 imágenes por semana\n\nTodo optimizado para tu negocio. ¿Te gustaría ver ejemplos?';
-                } else if (lowerMessage.includes('whatsapp') || lowerMessage.includes('bot')) {
-                    response = 'El bot de WhatsApp atiende automáticamente 24/7. Puede:\n\n• Responder consultas frecuentes\n• Enviar presupuestos automáticos\n• Confirmar pedidos\n• Derivar a un humano si es necesario\n\n¿Te gustaría una demo?';
-                } else if (lowerMessage.includes('hola') || lowerMessage.includes('buenas')) {
-                    response = '¡Hola! ¿En qué puedo ayudarte? Contame sobre tu negocio y te recomiendo soluciones.';
-                } else {
-                    response = 'Entiendo. Para darte una mejor recomendación, contame:\n\n1. ¿Qué tipo de negocio tenés?\n2. ¿Cuál es tu principal desafío?\n3. ¿Tenés algún presupuesto en mente?\n\nAsí te puedo orientar mejor 👍';
-                }
-                
-                addMessage(response, 'ai');
-            }
-            
-            // ===== TABS DE SERVICIOS =====
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            if (tabBtns.length > 0 && tabContents.length > 0) {
-                tabBtns.forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const tabId = this.getAttribute('data-tab');
-                        
-                        // Remover clase active de todos los botones
-                        tabBtns.forEach(b => b.classList.remove('active'));
-                        
-                        // Agregar clase active al botón clickeado
-                        this.classList.add('active');
-                        
-                        // Ocultar todos los contenidos
-                        tabContents.forEach(content => {
-                            content.classList.remove('active');
-                        });
-                        
-                        // Mostrar el contenido correspondiente
-                        const activeContent = document.getElementById(tabId);
-                        if (activeContent) {
-                            activeContent.classList.add('active');
-                        }
-                    });
-                });
-            }
-            
-            // ===== SCROLL SUAVE =====
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    if (this.getAttribute('href') === '#') return;
-                    
-                    const targetId = this.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    
-                    if (targetElement) {
-                        e.preventDefault();
-                        const headerHeight = document.querySelector('.main-header').offsetHeight;
-                        const targetPosition = targetElement.offsetTop - headerHeight;
-                        
-                        window.scrollTo({
-                            top: targetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-            
-            // ===== PREVENIR LOGOS GRANDES =====
-            window.addEventListener('load', function() {
-                const logos = document.querySelectorAll('img[src*="logo"]');
-                logos.forEach(logo => {
-                    logo.style.objectFit = 'contain';
-                    logo.style.maxWidth = '100%';
-                    logo.style.maxHeight = '100%';
-                });
-            });
-        });
-    </script>
+    <!-- JavaScript -->
+    <script src="script.js"></script>
 </body>
 </html>
