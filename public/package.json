@@ -1,15 +1,19 @@
 {
   "name": "digitalrosario",
   "version": "1.0.0",
-  "description": "Sitio con IA para negocios de Rosario",
+  "description": "Sitio web con IA para negocios de Rosario",
   "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "test": "echo 'No tests specified'"
+  },
   "dependencies": {
     "node-fetch": "^2.6.7"
   },
   "engines": {
     "node": ">=14.0.0"
   },
-  "scripts": {
-    "build": "echo 'No build step required'"
-  }
+  "keywords": ["digital", "rosario", "negocios", "ia", "chatbot"],
+  "author": "Digital Rosario",
+  "license": "MIT"
 }
