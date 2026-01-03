@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Rosario - Soluciones Digitales para Negocios Locales</title>
-    <meta name="description" content="Automatización, marketing digital y soluciones a medida para ferreterías, comercios y pymes de Rosario. Más ventas, menos trabajo.">
+    <meta name="description" content="Transformá tu negocio con automatización, marketing digital y soluciones a medida. Más ventas, menos trabajo manual.">
     
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="logo.png">
@@ -20,28 +20,55 @@
     <meta property="og:description" content="Automatización, marketing digital y soluciones a medida para negocios de Rosario">
     <meta property="og:image" content="logo.png">
     <meta property="og:url" content="https://digitalrosario.netlify.app">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#6675FF">
 </head>
 <body>
+    <!-- Loading Animation -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="loading-text">
+                <h3>Digital Rosario</h3>
+                <p>Cargando soluciones digitales...</p>
+            </div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="main-header">
         <div class="container">
             <div class="header-content">
                 <a href="#" class="logo-container">
-                    <img src="logo.png" alt="Digital Rosario" class="logo-img">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
                     <div class="logo-text">
                         <span class="logo-main">Digital Rosario</span>
                         <span class="logo-sub">Soluciones Digitales</span>
                     </div>
                 </a>
                 <nav class="main-nav">
-                    <a href="#services">Servicios</a>
-                    <a href="#problems">Problemas</a>
-                    <a href="#process">Cómo Trabajamos</a>
-                    <a href="#contact" class="nav-cta">
+                    <a href="#services" class="nav-link">
+                        <i class="fas fa-robot"></i> Servicios
+                    </a>
+                    <a href="#problems" class="nav-link">
+                        <i class="fas fa-exclamation-triangle"></i> Problemas
+                    </a>
+                    <a href="#process" class="nav-link">
+                        <i class="fas fa-play-circle"></i> Cómo Trabajamos
+                    </a>
+                    <a href="#contact" class="nav-link nav-cta">
                         <i class="fab fa-whatsapp"></i> WhatsApp
                     </a>
                 </nav>
-                <button class="mobile-menu-btn">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -49,14 +76,14 @@
     </header>
 
     <!-- Chat IA -->
-    <div class="chat-widget">
+    <div class="chat-widget" id="chatWidget">
         <div class="chat-header">
-            <div class="chat-avatar">
+            <div class="chat-avatar pulse">
                 <i class="fas fa-robot"></i>
             </div>
             <div class="chat-info">
-                <h4>Asistente Digital</h4>
-                <p class="status"><span class="status-dot"></span> En línea</p>
+                <h4>Asesor Digital</h4>
+                <p class="status"><span class="status-dot pulse-green"></span> En línea</p>
             </div>
             <button class="chat-toggle" id="chatToggle">
                 <i class="fas fa-chevron-down"></i>
@@ -64,31 +91,34 @@
         </div>
         <div class="chat-body" id="chatBody">
             <div class="chat-messages" id="chatMessages">
-                <!-- Mensajes cargados por JS -->
+                <!-- Mensajes cargados por JavaScript -->
             </div>
             <div class="chat-input-area">
-                <textarea id="userInput" placeholder="Escribí tu mensaje..." rows="1"></textarea>
-                <button id="sendButton">
+                <textarea id="userInput" placeholder="Escribí tu mensaje aquí..." rows="1"></textarea>
+                <button id="sendButton" class="send-btn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
             <div class="chat-disclaimer">
-                <small><i class="fas fa-info-circle"></i> IA real • Respuestas en segundos</small>
+                <small><i class="fas fa-shield-alt"></i> IA profesional • Respuestas en segundos</small>
             </div>
         </div>
     </div>
 
-    <!-- Hero -->
+    <!-- Hero Section -->
     <section class="hero">
+        <div class="hero-background">
+            <div class="hero-bg-animation"></div>
+        </div>
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text">
-                    <span class="badge">PARA NEGOCIOS DE ROSARIO</span>
-                    <h1>No pierdas ventas por <span class="highlight">falta de tiempo o tecnología</span></h1>
-                    <p class="hero-subtitle">Automatizamos tu negocio, manejamos tus redes y creamos herramientas digitales a medida. Más ventas, menos trabajo manual.</p>
+                    <span class="badge slide-in-left">PARA NEGOCIOS DE ROSARIO</span>
+                    <h1 class="slide-in-right">Transformá tu negocio con <span class="highlight-gradient">soluciones digitales</span></h1>
+                    <p class="hero-subtitle fade-in">Automatizamos procesos, manejamos tus redes y creamos herramientas a medida. Más ventas, menos trabajo manual.</p>
                     <div class="hero-cta">
                         <a href="https://wa.me/5493417558966?text=Hola!%20Vi%20Digital%20Rosario%20y%20quiero%20saber%20más%20sobre%20soluciones%20digitales%20para%20mi%20negocio." 
-                           class="btn btn-primary" target="_blank">
+                           class="btn btn-primary pulse-soft" target="_blank">
                             <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
                         </a>
                         <a href="#services" class="btn btn-secondary">
@@ -96,26 +126,42 @@
                         </a>
                     </div>
                     <div class="hero-stats">
-                        <div class="stat">
+                        <div class="stat fade-in-up" style="animation-delay: 0.1s">
                             <h3>24/7</h3>
                             <p>Atención automática</p>
                         </div>
-                        <div class="stat">
+                        <div class="stat fade-in-up" style="animation-delay: 0.2s">
                             <h3>+30%</h3>
                             <p>Ventas en promedio</p>
                         </div>
-                        <div class="stat">
+                        <div class="stat fade-in-up" style="animation-delay: 0.3s">
                             <h3>-70%</h3>
                             <p>Tareas manuales</p>
                         </div>
                     </div>
                 </div>
                 <div class="hero-image">
-                    <div class="hero-image-placeholder">
-                        <div class="placeholder-content">
-                            <img src="logo.png" alt="Digital Rosario" class="placeholder-logo">
-                            <h3 class="placeholder-title">Tu negocio digitalizado</h3>
-                            <p class="placeholder-subtitle">Soluciones específicas para comercios de Rosario</p>
+                    <div class="hero-image-container">
+                        <div class="floating-card">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h4>Más Ventas</h4>
+                            <p>Automatizá tus procesos de venta</p>
+                        </div>
+                        <div class="floating-card" style="animation-delay: 0.5s">
+                            <div class="card-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4>Más Tiempo</h4>
+                            <p>Reducí trabajo manual</p>
+                        </div>
+                        <div class="floating-card" style="animation-delay: 1s">
+                            <div class="card-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h4>Más Clientes</h4>
+                            <p>Llegá a más personas</p>
                         </div>
                     </div>
                 </div>
@@ -126,35 +172,37 @@
     <!-- Problemas -->
     <section class="problems" id="problems">
         <div class="container">
-            <h2>¿Te suenan estos problemas?</h2>
+            <h2 class="section-title">¿Te suenan estos problemas?</h2>
+            <p class="section-subtitle">Identificá los desafíos comunes que resolvemos</p>
+            
             <div class="problems-grid">
-                <div class="problem-card">
+                <div class="problem-card hover-lift">
                     <div class="problem-icon">
                         <i class="fas fa-clock"></i>
                     </div>
-                    <h3>No llegás a responder mensajes</h3>
+                    <h3>No llegás a responder</h3>
                     <p>WhatsApp e Instagram llenos de consultas que se pierden.</p>
                 </div>
-                <div class="problem-card">
+                <div class="problem-card hover-lift" style="animation-delay: 0.1s">
                     <div class="problem-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3>Perdés ventas por no estar visible</h3>
+                    <h3>Perdés ventas por visibilidad</h3>
                     <p>Tu competencia aparece primero en redes y Google.</p>
                 </div>
-                <div class="problem-card">
+                <div class="problem-card hover-lift" style="animation-delay: 0.2s">
                     <div class="problem-icon">
                         <i class="fas fa-user-clock"></i>
                     </div>
                     <h3>No tenés tiempo para marketing</h3>
                     <p>Entre atender y administrar, las redes quedan para "después".</p>
                 </div>
-                <div class="problem-card">
+                <div class="problem-card hover-lift" style="animation-delay: 0.3s">
                     <div class="problem-icon">
                         <i class="fas fa-cogs"></i>
                     </div>
-                    <h3>Procesos manuales que consumen horas</h3>
-                    <p>Presupuestos, consultas de stock, recordatorios... todo a mano.</p>
+                    <h3>Procesos manuales lentos</h3>
+                    <p>Presupuestos, consultas de stock, todo a mano y con errores.</p>
                 </div>
             </div>
         </div>
@@ -164,7 +212,7 @@
     <section class="services" id="services">
         <div class="container">
             <div class="section-header">
-                <h2>Soluciones que implementamos</h2>
+                <h2 class="section-title">Soluciones que implementamos</h2>
                 <p class="section-subtitle">Todo lo que tu negocio necesita para vender más y trabajar menos</p>
             </div>
             
@@ -182,7 +230,7 @@
             
             <div class="tab-content active" id="automation">
                 <div class="service-grid">
-                    <div class="service-card" data-service="whatsapp">
+                    <div class="service-card hover-scale" data-service="whatsapp">
                         <div class="service-icon">
                             <i class="fab fa-whatsapp"></i>
                         </div>
@@ -193,7 +241,7 @@
                             <span class="price-note">+ $15.000/mes</span>
                         </div>
                     </div>
-                    <div class="service-card" data-service="web">
+                    <div class="service-card hover-scale" data-service="web">
                         <div class="service-icon">
                             <i class="fas fa-shopping-cart"></i>
                         </div>
@@ -203,7 +251,7 @@
                             <span class="price">Desde $150.000</span>
                         </div>
                     </div>
-                    <div class="service-card" data-service="quotes">
+                    <div class="service-card hover-scale" data-service="quotes">
                         <div class="service-icon">
                             <i class="fas fa-calculator"></i>
                         </div>
@@ -213,7 +261,7 @@
                             <span class="price">Desde $60.000</span>
                         </div>
                     </div>
-                    <div class="service-card" data-service="automation">
+                    <div class="service-card hover-scale" data-service="automation">
                         <div class="service-icon">
                             <i class="fas fa-tasks"></i>
                         </div>
@@ -229,7 +277,7 @@
             
             <div class="tab-content" id="marketing">
                 <div class="service-grid">
-                    <div class="service-card" data-service="marketing">
+                    <div class="service-card hover-scale" data-service="marketing">
                         <div class="service-icon">
                             <i class="fas fa-hashtag"></i>
                         </div>
@@ -239,7 +287,7 @@
                             <span class="price">Desde $45.000/mes</span>
                         </div>
                     </div>
-                    <div class="service-card" data-service="ads">
+                    <div class="service-card hover-scale" data-service="ads">
                         <div class="service-icon">
                             <i class="fas fa-ad"></i>
                         </div>
@@ -250,7 +298,7 @@
                             <span class="price-note">+ inversión en anuncios</span>
                         </div>
                     </div>
-                    <div class="service-card" data-service="content">
+                    <div class="service-card hover-scale" data-service="content">
                         <div class="service-icon">
                             <i class="fas fa-camera"></i>
                         </div>
@@ -275,11 +323,11 @@
                     <div class="custom-examples">
                         <h4>Ejemplos de lo que podemos crear:</h4>
                         <ul>
-                            <li>Sistemas internos de gestión</li>
-                            <li>Automatización de tareas específicas</li>
-                            <li>Integraciones especiales</li>
-                            <li>Herramientas personalizadas para tu rubro</li>
-                            <li>Digitalización de procesos</li>
+                            <li><i class="fas fa-check"></i> Sistemas internos de gestión</li>
+                            <li><i class="fas fa-check"></i> Automatización de tareas específicas</li>
+                            <li><i class="fas fa-check"></i> Integraciones especiales</li>
+                            <li><i class="fas fa-check"></i> Herramientas personalizadas</li>
+                            <li><i class="fas fa-check"></i> Digitalización de procesos</li>
                         </ul>
                     </div>
                 </div>
@@ -290,40 +338,50 @@
     <!-- Proceso -->
     <section class="process" id="process">
         <div class="container">
-            <h2>Cómo trabajamos</h2>
+            <h2 class="section-title">Cómo transformamos tu negocio</h2>
+            <p class="section-subtitle">Un proceso claro y transparente</p>
+            
             <div class="process-steps">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h3>Analizamos tu negocio</h3>
-                    <p>Charlamos por WhatsApp para entender tus procesos y objetivos.</p>
+                    <div class="step-content">
+                        <h3>Analizamos tu negocio</h3>
+                        <p>Charlamos por WhatsApp para entender tus procesos y objetivos.</p>
+                    </div>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h3>Proponemos solución</h3>
-                    <p>Te presentamos opciones claras, con precios y plazos realistas.</p>
+                    <div class="step-content">
+                        <h3>Proponemos solución</h3>
+                        <p>Te presentamos opciones claras, con precios y plazos realistas.</p>
+                    </div>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
-                    <h3>Implementamos</h3>
-                    <p>Desarrollamos y configuramos todo. Vos seguís trabajando normal.</p>
+                    <div class="step-content">
+                        <h3>Implementamos</h3>
+                        <p>Desarrollamos y configuramos todo. Vos seguís trabajando normal.</p>
+                    </div>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
-                    <h3>Soporte continuo</h3>
-                    <p>Ajustes y mejoras para que sigas creciendo digitalmente.</p>
+                    <div class="step-content">
+                        <h3>Soporte continuo</h3>
+                        <p>Ajustes y mejoras para que sigas creciendo digitalmente.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contacto -->
+    <!-- CTA Final -->
     <section class="final-cta" id="contact">
         <div class="container">
             <div class="cta-box">
                 <h2>¿Listo para digitalizar tu negocio?</h2>
                 <p class="cta-subtitle">Hablá ahora con nuestro equipo por WhatsApp. Sin compromiso.</p>
                 <a href="https://wa.me/5493417558966?text=Hola!%20Quiero%20consultar%20sobre%20soluciones%20digitales%20para%20mi%20negocio%20en%20Rosario." 
-                   class="btn btn-whatsapp" target="_blank">
+                   class="btn btn-whatsapp pulse-soft" target="_blank">
                     <i class="fab fa-whatsapp"></i> 
                     <div class="cta-text">
                         <strong>Consultar por WhatsApp</strong>
@@ -342,13 +400,15 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-logo">
-                    <div class="logo-container">
-                        <img src="logo.png" alt="Digital Rosario" class="logo-img">
+                    <a href="#" class="logo-container">
+                        <div class="logo-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
                         <div class="logo-text">
                             <span class="logo-main">Digital Rosario</span>
                             <span class="logo-sub">Soluciones Digitales</span>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 <div class="footer-info">
                     <p>© 2024 Digital Rosario - Para negocios de Rosario y zona</p>
