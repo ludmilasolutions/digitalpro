@@ -1,11 +1,18 @@
-// public/script.js - SISTEMA COMPLETO DE CHAT CON HISTORIAL
+// public/script.js - SISTEMA COMPLETO DE CHAT CON CALIFICACIÓN COMERCIAL
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Digital Rosario - Sistema cargado con Gemini 2.5 Flash');
+    console.log('🚀 Digital Rosario - Sistema cargado con Calificador Comercial');
     
     // ===== VARIABLES GLOBALES =====
     let isTyping = false;
     let isChatInitialized = false;
     let messageHistory = [];
+    let businessInfo = {
+        rubro: null,
+        actividad: null,
+        canales: null,
+        problema: null,
+        objetivo: null
+    };
     const API_ENDPOINT = '/.netlify/functions/gemini';
     const WHATSAPP_NUMBER = '5493417558966';
     const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
@@ -20,8 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chatWidget: document.getElementById('chatWidget'),
         mobileMenuBtn: document.getElementById('mobileMenuBtn'),
         mainNav: document.querySelector('.main-nav'),
-        loadingScreen: document.getElementById('loadingScreen'),
-        clearChatBtn: document.getElementById('clearChatBtn')
+        loadingScreen: document.getElementById('loadingScreen')
     };
     
     // ===== INICIALIZACIÓN =====
@@ -39,13 +45,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cargar historial desde localStorage
         loadMessageHistory();
         
+        // Cargar info del negocio
+        loadBusinessInfo();
+        
         // Inicializar chat
         initChat();
         
         // Configurar eventos
         setupEventListeners();
         
-        console.log('✅ Sistema inicializado. Historial:', messageHistory.length, 'mensajes');
+        console.log('✅ Sistema inicializado. Info:', businessInfo);
     }
     
     // ===== CHAT FUNCTIONS =====
@@ -61,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Agregar mensaje inicial
         setTimeout(() => {
-            addMessage('¡Hola! Soy Digital Rosario, tu asesor digital. Ayudo a negocios como el tuyo a vender más y trabajar menos. ¿Me contás qué tipo de negocio tenés? 👋', 'ai');
+            addMessage('¡Hola! Soy Digital Rosario, tu calificador comercial digital. Ayudo a negocios como el tuyo a preparar información para soluciones digitales.\n\nPara empezar, ¿me contás a qué rubro pertenece tu negocio?', 'ai');
             isChatInitialized = true;
         }, 1000);
     }
@@ -102,6 +111,11 @@ document.addEventListener('DOMContentLoaded', function() {
         contentDiv.className = 'message-content';
         contentDiv.innerHTML = `<p>${formatMessageText(text)}</p>`;
         
+        // Detectar si es un resumen de WhatsApp
+        if (sender === 'ai' && text.includes('Rubro:') && text.includes('Actividad:')) {
+            extractBusinessInfoFromSummary(text);
+        }
+        
         msgDiv.appendChild(contentDiv);
         elements.chatMessages.appendChild(msgDiv);
         
@@ -135,6 +149,83 @@ document.addEventListener('DOMContentLoaded', function() {
         return messageId;
     }
     
+    function extractBusinessInfoFromSummary(text) {
+        const lines = text.split('\n');
+        lines.forEach(line => {
+            if (line.includes('Rubro:')) {
+                businessInfo.rubro = line.replace('Rubro:', '').trim();
+            } else if (line.includes('Actividad:')) {
+                businessInfo.actividad = line.replace('Actividad:', '').trim();
+            } else if (line.includes('Canales actuales:')) {
+                businessInfo.canales = line.replace('Canales actuales:', '').trim();
+            } else if (line.includes('Problema principal:')) {
+                businessInfo.problema = line.replace('Problema principal:', '').trim();
+            } else if (line.includes('Objetivo:')) {
+                businessInfo.objetivo = line.replace('Objetivo:', '').trim();
+            }
+        });
+        
+        saveBusinessInfo();
+        
+        // Verificar si tenemos toda la información
+        if (businessInfo.rubro && businessInfo.actividad && businessInfo.canales && 
+            businessInfo.problema && businessInfo.objetivo) {
+            showWhatsAppCTA();
+        }
+    }
+    
+    function showWhatsAppCTA() {
+        // Esperar un momento antes de mostrar el CTA
+        setTimeout(() => {
+            const summaryText = generateWhatsAppSummary();
+            const encodedText = encodeURIComponent(summaryText);
+            const whatsappLink = `${WHATSAPP_URL}?text=${encodedText}`;
+            
+            // Crear botón de WhatsApp
+            const ctaDiv = document.createElement('div');
+            ctaDiv.className = 'message ai whatsapp-cta';
+            ctaDiv.style.marginTop = '10px';
+            
+            ctaDiv.innerHTML = `
+                <div class="message-content">
+                    <p><strong>✅ Información completa</strong></p>
+                    <p>Ya tengo toda la información para preparar tu caso. Podés continuar directamente por WhatsApp:</p>
+                    <a href="${whatsappLink}" target="_blank" class="whatsapp-link-btn" style="
+                        display: inline-block;
+                        background: #25D366;
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        margin-top: 10px;
+                        text-align: center;
+                        width: 100%;
+                        box-sizing: border-box;
+                    ">
+                        <i class="fab fa-whatsapp"></i> Continuar por WhatsApp
+                    </a>
+                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                        <i class="fas fa-info-circle"></i> Se enviará automáticamente el resumen de tu consulta
+                    </p>
+                </div>
+            `;
+            
+            elements.chatMessages.appendChild(ctaDiv);
+            scrollToBottom();
+        }, 1000);
+    }
+    
+    function generateWhatsAppSummary() {
+        return `Hola! Quiero consultar por soluciones digitales para mi negocio.
+
+Rubro: ${businessInfo.rubro || 'No especificado'}
+Actividad: ${businessInfo.actividad || 'No especificado'}
+Canales actuales: ${businessInfo.canales || 'No especificado'}
+Problema principal: ${businessInfo.problema || 'No especificado'}
+Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
+    }
+    
     function formatMessageText(text) {
         return text
             .replace(/&/g, '&amp;')
@@ -148,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showTypingIndicator() {
         const typingId = 'typing-' + Date.now();
         const typingDiv = document.createElement('div');
-        typingDiv.id = typingId; // CORRECCIÓN: Cambiado typingId.id a typingDiv.id
+        typingDiv.id = typingId;
         typingDiv.className = 'message ai typing';
         typingDiv.innerHTML = `
             <div class="message-content">
@@ -209,9 +300,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function saveBusinessInfo() {
+        try {
+            localStorage.setItem('digitalRosarioBusinessInfo', JSON.stringify(businessInfo));
+        } catch (e) {
+            console.warn('No se pudo guardar businessInfo');
+        }
+    }
+    
+    function loadBusinessInfo() {
+        try {
+            const saved = localStorage.getItem('digitalRosarioBusinessInfo');
+            if (saved) {
+                businessInfo = JSON.parse(saved) || {};
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar businessInfo');
+            businessInfo = {
+                rubro: null,
+                actividad: null,
+                canales: null,
+                problema: null,
+                objetivo: null
+            };
+        }
+    }
+    
     function clearMessageHistory() {
         messageHistory = [];
+        businessInfo = {
+            rubro: null,
+            actividad: null,
+            canales: null,
+            problema: null,
+            objetivo: null
+        };
         localStorage.removeItem('digitalRosarioChatHistory');
+        localStorage.removeItem('digitalRosarioBusinessInfo');
         
         if (elements.chatMessages) {
             elements.chatMessages.innerHTML = '';
@@ -231,11 +356,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Enviar mensaje
         if (elements.sendButton) {
             elements.sendButton.addEventListener('click', sendUserMessage);
-        }
-        
-        // Limpiar chat
-        if (elements.clearChatBtn) {
-            elements.clearChatBtn.addEventListener('click', clearMessageHistory);
         }
         
         // Enter en textarea
@@ -260,6 +380,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+        
+        // Mobile menu
+        if (elements.mobileMenuBtn) {
+            elements.mobileMenuBtn.addEventListener('click', () => {
+                elements.mainNav.classList.toggle('show');
+            });
+        }
+        
+        // Mobile chat open button
+        const mobileChatOpen = document.querySelector('.mobile-chat-open');
+        if (mobileChatOpen) {
+            mobileChatOpen.addEventListener('click', openChatMobile);
+        }
+        
+        // Cerrar chat al hacer clic fuera en mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                const chatWidget = elements.chatWidget;
+                const isClickInside = chatWidget.contains(e.target);
+                
+                if (!isClickInside && !chatWidget.classList.contains('minimized')) {
+                    minimizeChatMobile();
+                }
+            }
+        });
     }
     
     // ===== CHAT LOGIC =====
@@ -307,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
             removeTypingIndicator(typingId);
             
             // Respuesta de fallback
-            addMessage(`¡Hola! Para darte una mejor atención, contame:\n\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés mejorar o automatizar?\n\nAsí te puedo ayudar con una solución concreta.`, 'ai');
+            addMessage(`¡Hola! Para preparar tu información correctamente, necesito saber:\n\n1. ¿A qué rubro pertenece tu negocio?\n2. ¿Qué actividad realizás específicamente?\n\nContame en tus palabras.`, 'ai');
         } finally {
             isTyping = false;
         }
@@ -315,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function callAI(userMessage, history) {
         try {
-            console.log('🤖 Enviando a Gemini 2.5 Flash:', userMessage.substring(0, 50));
+            console.log('🤖 Enviando a Calificador Comercial:', userMessage.substring(0, 50));
             
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
@@ -338,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(data.error);
             }
             
-            return data.text || '¡Hola! Contame más sobre tu negocio para ayudarte mejor.';
+            return data.text || 'Gracias por la información. ¿Podrías contarme un poco más sobre cómo llegan los clientes a tu negocio hoy?';
             
         } catch (error) {
             console.error('❌ Error en callAI:', error);
@@ -361,8 +506,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function openChatMobile() {
+        if (window.innerWidth <= 768) {
+            elements.chatWidget.classList.remove('minimized');
+            setTimeout(() => {
+                elements.userInput?.focus();
+                scrollToBottom();
+            }, 300);
+        }
+    }
+    
+    function minimizeChatMobile() {
+        if (window.innerWidth <= 768) {
+            elements.chatWidget.classList.add('minimized');
+        }
+    }
+    
     // ===== INITIALIZE =====
     init();
+    
+    // ===== RESPONSIVE CHAT =====
+    function handleResponsiveChat() {
+        if (window.innerWidth <= 768) {
+            // En mobile, el chat inicia minimizado
+            if (!elements.chatWidget.classList.contains('minimized')) {
+                minimizeChatMobile();
+            }
+        } else {
+            // En desktop, siempre visible
+            elements.chatWidget.classList.remove('minimized');
+        }
+    }
+    
+    // Inicializar responsive chat
+    handleResponsiveChat();
+    window.addEventListener('resize', handleResponsiveChat);
     
     // ===== EXPORT FUNCTIONS FOR DEBUGGING =====
     window.DigitalRosario = {
@@ -371,11 +549,12 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleChat,
         clearChat: clearMessageHistory,
         messageHistory: () => messageHistory,
+        businessInfo: () => businessInfo,
         testAPI: async () => {
             const response = await fetch(API_ENDPOINT, { method: 'GET' });
             return response.json();
         }
     };
     
-    console.log('🎯 Digital Rosario con Gemini 2.5 Flash listo para usar.');
+    console.log('🎯 Sistema Calificador Comercial listo para usar.');
 });
