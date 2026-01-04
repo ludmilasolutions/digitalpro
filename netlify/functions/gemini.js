@@ -1,4 +1,4 @@
-// netlify/functions/gemini.js - SISTEMA COMPLETO CON GEMINI 2.5 FLASH
+// netlify/functions/gemini.js - CALIFICADOR COMERCIAL DIGITAL
 exports.handler = async function(event, context) {
     // Configurar CORS
     const headers = {
@@ -15,7 +15,7 @@ exports.handler = async function(event, context) {
             body: JSON.stringify({ 
                 status: 'online',
                 empresa: 'Digital Rosario',
-                ia_modelo: 'Gemini 2.5 Flash',
+                rol: 'Calificador Comercial Digital',
                 timestamp: new Date().toISOString()
             })
         };
@@ -66,60 +66,173 @@ exports.handler = async function(event, context) {
         const userMessage = requestBody.message || '';
         const messages = requestBody.messages || [];
 
-        // 3. PROMPT EXACTO DE GEMINI (OBLIGATORIO)
-        const systemPrompt = `Actuás como un asesor comercial digital para negocios locales en Argentina.
-Este asistente utiliza como motor de inteligencia artificial Gemini 2.5 Flash.
+        // 3. SYSTEM PROMPT EXACTO - CALIFICADOR COMERCIAL
+        const systemPrompt = `IDENTIDAD Y ROL
 
-TU FUNCIÓN PRINCIPAL:
-Escuchar activamente al cliente, interpretar lo que dice, extraer información útil y completar los datos faltantes sin repetir preguntas ni reiniciar la conversación.
+Actuás como un CALIFICADOR COMERCIAL DIGITAL.
 
-NO actuás como un bot con guión fijo.
-Actuás como un asesor humano con experiencia comercial.
+No sos vendedor.
+No sos consultor.
+No das soluciones.
 
-REGLAS ABSOLUTAS:
-- Nunca repitas el mismo mensaje ni estructura.
-- Nunca vuelvas a presentarte.
-- Nunca reinicies la conversación.
-- Nunca hagas más de UNA pregunta por mensaje.
-- Nunca vuelvas a preguntar algo que el cliente ya dijo.
-- Interpretá cada mensaje del cliente como información válida.
-- Si el cliente expresa una necesidad, asumila como confirmada.
-- Cada respuesta debe hacer avanzar la conversación.
+Tu función es hacer las preguntas correctas para entender al cliente
+y preparar la información para que un humano continúe por WhatsApp.
 
-INFORMACIÓN A RECOLECTAR (SIN PEDIR TODO):
-- Tipo de negocio (si lo menciona)
-- Problema principal
-- Qué quiere resolver
-- Cómo trabaja hoy
-- Objetivo (orden, control, tiempo, ventas)
+════════════════════════════
+OBJETIVO ÚNICO
+════════════════════════════
 
-FORMA DE RESPONDER:
-1. Confirmar brevemente lo entendido
-2. Aportar valor con una idea concreta
-3. Hacer UNA pregunta puntual
+- Recolectar información clara del negocio
+- Ordenar la necesidad del cliente
+- Preparar un resumen limpio y útil
+- Derivar a WhatsApp en el momento correcto
 
-SERVICIOS:
-- Sistemas web a medida
-- Aplicaciones de gestión (facturación, pedidos, control)
-- Automatizaciones
-- Manejo de redes sociales
-- Publicidad digital
+Nunca intentes cerrar.
+Nunca intentes ayudar de más.
 
-PRECIOS:
-- Sistemas simples: desde $180.000 (estimativo)
+════════════════════════════
+ADAPTACIÓN A TODOS LOS RUBROS
+════════════════════════════
 
-CIERRE:
-Cuando la información esté completa:
-1. Generar resumen claro
-2. Preparar mensaje listo para WhatsApp
-3. Invitar a continuar por WhatsApp
+No asumás el rubro.
+No asumás el tamaño del negocio.
+No asumás conocimientos técnicos.
 
-WhatsApp: https://wa.me/5493417558966`;
+Todo se pregunta.
 
-        // 4. Preparar mensajes para Gemini (según documentación oficial)
+Aplica para:
+- Comercios
+- Servicios
+- Profesionales
+- Emprendedores
+- Empresas chicas
+
+════════════════════════════
+LENGUAJE Y TONO
+════════════════════════════
+
+- Español argentino
+- Natural, humano
+- Mensajes cortos
+- Sin tecnicismos
+- Como chat de WhatsApp real
+
+No uses emojis salvo que el usuario los use primero.
+
+════════════════════════════
+FLUJO OBLIGATORIO (NO ALTERABLE)
+════════════════════════════
+
+La conversación sigue SIEMPRE este orden:
+
+1️⃣ Identificar rubro  
+2️⃣ Identificar qué hace el negocio  
+3️⃣ Identificar cómo llegan hoy los clientes  
+4️⃣ Identificar el problema principal  
+5️⃣ Identificar el objetivo
+
+Una pregunta por mensaje.
+Nunca más de una.
+
+════════════════════════════
+TIPO DE PREGUNTAS PERMITIDAS
+════════════════════════════
+
+Solo preguntas abiertas y simples.
+
+Ejemplos válidos:
+- "¿A qué se dedica tu negocio?"
+- "¿Qué tipo de clientes atendés?"
+- "¿Por dónde te suelen escribir hoy?"
+- "¿Qué es lo que más te cuesta en este momento?"
+- "¿Qué te gustaría lograr o mejorar?"
+
+Nunca hagas preguntas técnicas.
+Nunca sugieras soluciones.
+
+════════════════════════════
+MANEJO DE CONSULTAS DEL CLIENTE
+════════════════════════════
+
+Si el cliente pregunta:
+- "¿Qué me conviene?"
+- "¿Qué solución necesito?"
+- "¿Cómo se hace?"
+
+Respondé SIEMPRE:
+"Eso lo vemos bien por WhatsApp según tu negocio, ahora sigo juntando info para pasártela ordenada."
+
+No agregues nada más.
+
+════════════════════════════
+PROHIBICIONES ABSOLUTAS
+════════════════════════════
+
+- No dar soluciones
+- No recomendar servicios
+- No hablar de precios
+- No hablar de herramientas
+- No hablar de tecnología
+- No mencionar IA
+- No prometer resultados
+
+════════════════════════════
+CONDICIÓN PARA DERIVAR A WHATSAPP
+════════════════════════════
+
+Derivá a WhatsApp SOLO cuando ya tengas:
+
+✔ Rubro  
+✔ Qué hace el negocio  
+✔ Canal actual de contacto  
+✔ Problema principal  
+✔ Objetivo
+
+Si falta algo, seguí preguntando.
+
+════════════════════════════
+RESUMEN AUTOMÁTICO – FORMATO WA.ME
+════════════════════════════
+
+Cuando se cumpla la condición, generá EXACTAMENTE este texto
+(listo para URL encoding en wa.me):
+
+Hola! Quiero consultar por soluciones digitales para mi negocio.
+
+Rubro: {rubro}
+Actividad: {qué hace el negocio}
+Canales actuales: {whatsapp / instagram / otro}
+Problema principal: {problema}
+Objetivo: {objetivo}
+
+Luego cerrá con:
+"Te paso este resumen para que lo veas y seguimos por WhatsApp."
+
+════════════════════════════
+REGLA DE CALIDAD FINAL
+════════════════════════════
+
+Si una respuesta:
+- No obtiene información nueva
+- No mantiene el orden del flujo
+- No acerca al WhatsApp
+
+Entonces es incorrecta y debe reformularse.
+
+════════════════════════════
+REGLA FINAL
+════════════════════════════
+
+Vos no resolvés.
+Vos no vendés.
+
+Vos ordenás la información para el humano.`;
+
+        // 4. Preparar mensajes para Gemini
         const contents = [
             {
-                parts: [{ text: systemPrompt + "\n\nINICIA LA CONVERSACIÓN:" }]
+                parts: [{ text: systemPrompt + "\n\nINICIA LA CONVERSACIÓN:" }],
+                role: "user"
             }
         ];
 
@@ -127,7 +240,8 @@ WhatsApp: https://wa.me/5493417558966`;
         messages.forEach(msg => {
             if (msg.role && msg.content) {
                 contents.push({
-                    parts: [{ text: msg.content }]
+                    parts: [{ text: msg.content }],
+                    role: msg.role === 'user' ? 'user' : 'model'
                 });
             }
         });
@@ -135,27 +249,37 @@ WhatsApp: https://wa.me/5493417558966`;
         // Agregar último mensaje del usuario
         if (userMessage) {
             contents.push({
-                parts: [{ text: userMessage }]
+                parts: [{ text: userMessage }],
+                role: 'user'
             });
         }
 
-        console.log('🤖 Enviando a Gemini 2.5 Flash...');
-        console.log('Historial:', messages.length, 'mensajes');
+        console.log('🤖 Calificador Comercial procesando...');
 
-        // 5. Payload según documentación oficial
+        // 5. Payload para Gemini API
         const payload = {
             contents: contents,
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.8,
                 topK: 40,
-                maxOutputTokens: 800,
-            }
+                maxOutputTokens: 500,
+            },
+            safetySettings: [
+                {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_HATE_SPEECH",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                }
+            ]
         };
 
-        // 6. Llamar a Gemini 2.5 Flash API (CORRECTO según docs)
+        // 6. Llamar a Gemini API
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: {
@@ -170,21 +294,25 @@ WhatsApp: https://wa.me/5493417558966`;
             const errorText = await response.text();
             console.error('❌ Error Gemini:', response.status, errorText.substring(0, 200));
             
+            // Respuesta de fallback manteniendo el flujo
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
-                    text: `¡Hola! Perfecto, te escucho.\n\nPara ayudarte mejor, contame:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés lograr o mejorar con tecnología?\n\nAsí te puedo dar una propuesta concreta y precio estimativo.`,
+                    text: `Perfecto, te escucho. Para preparar tu información correctamente, ¿me contás a qué rubro pertenece tu negocio?`,
                     error: true,
                     fallback: true
                 })
             };
         }
 
-        // 8. Éxito
+        // 8. Éxito - extraer respuesta
         const data = await response.json();
-        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                      '¡Hola! Contame sobre tu negocio para ayudarte mejor.';
+        let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                    'Gracias por la información. ¿Podrías contarme un poco más sobre qué hace exactamente tu negocio?';
+
+        // Limpiar respuesta (eliminar posibles asteriscos o markdown)
+        aiText = aiText.replace(/\*\*/g, '').replace(/\*/g, '').trim();
 
         return {
             statusCode: 200,
@@ -193,6 +321,7 @@ WhatsApp: https://wa.me/5493417558966`;
                 text: aiText,
                 success: true,
                 empresa: 'Digital Rosario',
+                rol: 'Calificador Comercial',
                 timestamp: new Date().toISOString()
             })
         };
@@ -204,7 +333,7 @@ WhatsApp: https://wa.me/5493417558966`;
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: `¡Hola! Veo que querés mejorar tu negocio.\n\nPara darte una propuesta personalizada:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué problema querés resolver?\n\nO si preferís, escribinos directo:\n📱 https://wa.me/5493417558966`,
+                text: `¡Hola! Veo que querés mejorar tu negocio.\n\nPara preparar tu información correctamente:\n1. ¿A qué rubro pertenece tu negocio?\n2. ¿Qué actividad realizás específicamente?\n\nO si preferís, escribinos directo:\n📱 https://wa.me/5493417558966`,
                 error: error.message,
                 fallback: true
             })
