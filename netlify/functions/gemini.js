@@ -1,61 +1,61 @@
-// netlify/functions/gemini.js - SISTEMA COMPLETO CON GEMINI 2.5 PRO
-exports.handler = async function(event, context) {
-    // Configurar CORS
+// netlify/functions/gemini.js
+// SISTEMA ESTABLE CON GEMINI 2.5 FLASH (PRODUCCIÓN)
+
+exports.handler = async function (event, context) {
+    // ===== CORS =====
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS, GET'
     };
 
-    // Para pruebas GET
+    // ===== GET (TEST) =====
     if (event.httpMethod === 'GET') {
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 status: 'online',
                 empresa: 'Digital Rosario',
-                ia_modelo: 'Gemini 2.5 Pro',
+                ia_modelo: 'Gemini 2.5 Flash',
                 timestamp: new Date().toISOString()
             })
         };
     }
 
-    // Manejar OPTIONS
+    // ===== OPTIONS =====
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }
 
-    // Solo aceptar POST
+    // ===== SOLO POST =====
     if (event.httpMethod !== 'POST') {
-        return { 
-            statusCode: 405, 
-            headers, 
-            body: JSON.stringify({ error: 'Método no permitido. Usa POST.' }) 
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ error: 'Método no permitido. Usa POST.' })
         };
     }
 
     try {
-        // 1. Verificar API Key
+        // ===== API KEY =====
         const API_KEY = process.env.GEMINI_API_KEY;
-        
+
         if (!API_KEY) {
-            console.error('❌ GEMINI_API_KEY no configurada');
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ 
-                    error: 'API Key no configurada',
-                    tip: 'Configura GEMINI_API_KEY en Netlify > Environment Variables'
+                body: JSON.stringify({
+                    error: 'GEMINI_API_KEY no configurada'
                 })
             };
         }
 
-        // 2. Parsear entrada
-        let requestBody;
+        // ===== BODY =====
+        let body;
         try {
-            requestBody = JSON.parse(event.body);
-        } catch(e) {
+            body = JSON.parse(event.body);
+        } catch {
             return {
                 statusCode: 400,
                 headers,
@@ -63,110 +63,86 @@ exports.handler = async function(event, context) {
             };
         }
 
-        const userMessage = requestBody.message || '';
-        const messages = requestBody.messages || [];
+        const userMessage = body.message || '';
+        const messages = body.messages || [];
 
-        // 3. PROMPT EXACTO DE GEMINI (OBLIGATORIO)
-        const systemPrompt = `Actuás como un asesor comercial digital para negocios locales en Argentina.
-Este asistente utiliza como motor de inteligencia artificial Gemini 2.5 Pro.
+        // ===== SYSTEM PROMPT (CORRECTO) =====
+        const systemPrompt = `
+Actuás como un asesor comercial digital para negocios locales en Argentina.
+Motor de IA: Gemini 2.5 Flash.
 
-TU FUNCIÓN PRINCIPAL:
-Escuchar activamente al cliente, interpretar lo que dice, extraer información útil y completar los datos faltantes sin repetir preguntas ni reiniciar la conversación.
+ROL:
+Sos un asesor humano, profesional y comercial. No sos un bot.
 
-NO actuás como un bot con guión fijo.
-Actuás como un asesor humano con experiencia comercial.
+OBJETIVO:
+Entender la necesidad del cliente y avanzar hacia una solución concreta sin fricción.
 
 REGLAS ABSOLUTAS:
-- Nunca repitas el mismo mensaje ni estructura.
-- Nunca vuelvas a presentarte.
+- Nunca te vuelvas a presentar.
 - Nunca reinicies la conversación.
+- Nunca repitas preguntas.
 - Nunca hagas más de UNA pregunta por mensaje.
-- Nunca vuelvas a preguntar algo que el cliente ya dijo.
-- Interpretá cada mensaje del cliente como información válida.
-- Si el cliente expresa una necesidad, asumila como confirmada.
-- Cada respuesta debe hacer avanzar la conversación.
-
-INFORMACIÓN A RECOLECTAR (SIN PEDIR TODO):
-- Tipo de negocio (si lo menciona)
-- Problema principal
-- Qué quiere resolver
-- Cómo trabaja hoy
-- Objetivo (orden, control, tiempo, ventas)
+- Interpretá lo que el cliente dice como información válida.
+- Si expresa una necesidad, asumila como confirmada.
+- Cada respuesta debe hacer avanzar la venta.
 
 FORMA DE RESPONDER:
 1. Confirmar brevemente lo entendido
-2. Aportar valor con una idea concreta
-3. Hacer UNA pregunta puntual
+2. Aportar valor concreto
+3. Hacer UNA sola pregunta puntual
 
 SERVICIOS:
 - Sistemas web a medida
-- Aplicaciones de gestión (facturación, pedidos, control)
+- Apps de gestión (facturación, pedidos, control)
 - Automatizaciones
 - Manejo de redes sociales
 - Publicidad digital
 
 PRECIOS:
-- Sistemas simples: desde $180.000 (estimativo)
+- Sistemas simples desde $180.000 (estimativo)
 
 CIERRE:
-Cuando la información esté completa:
-1. Generar resumen claro
-2. Preparar mensaje listo para WhatsApp
-3. Invitar a continuar por WhatsApp
+Cuando la info esté completa:
+- Resumir
+- Armar mensaje listo para WhatsApp
+- Invitar a continuar por WhatsApp
 
-WhatsApp: https://wa.me/5493417558966`;
+WhatsApp: https://wa.me/5493417558966
+`.trim();
 
-        // 4. Preparar historial de mensajes para Gemini
-        const geminiMessages = [
-            {
-                role: "user",
-                parts: [{ text: systemPrompt + "\n\nINICIA LA CONVERSACIÓN:" }]
-            }
-        ];
+        // ===== HISTORIAL =====
+        const contents = [];
 
-        // Agregar historial de conversación
         messages.forEach(msg => {
-            geminiMessages.push({
+            contents.push({
                 role: msg.role === 'user' ? 'user' : 'model',
                 parts: [{ text: msg.content }]
             });
         });
 
-        // Agregar último mensaje del usuario
         if (userMessage) {
-            geminiMessages.push({
-                role: "user",
+            contents.push({
+                role: 'user',
                 parts: [{ text: userMessage }]
             });
         }
 
-        // 5. Payload para Gemini 2.5 Pro
+        // ===== PAYLOAD =====
         const payload = {
-            contents: geminiMessages,
+            systemInstruction: {
+                parts: [{ text: systemPrompt }]
+            },
+            contents,
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.8,
-                topK: 40,
-                maxOutputTokens: 800,
-            },
-            safetySettings: [
-                {
-                    category: "HARM_CATEGORY_HARASSMENT",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    category: "HARM_CATEGORY_HATE_SPEECH",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                }
-            ]
+                maxOutputTokens: 700
+            }
         };
 
-        console.log('🤖 Enviando a Gemini 2.5 Pro...');
-        console.log('Historial:', messages.length, 'mensajes');
-
-        // 6. Llamar a Gemini 2.5 Pro API
+        // ===== CALL GEMINI =====
         const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
             {
                 method: 'POST',
                 headers: {
@@ -177,47 +153,36 @@ WhatsApp: https://wa.me/5493417558966`;
             }
         );
 
-        // 7. Procesar respuesta
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Error Gemini:', response.status, errorText.substring(0, 200));
-            
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({
-                    text: `Perfecto, entiendo que querés avanzar con tu negocio.\n\nPara darte una propuesta concreta, necesito saber:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué problema querés resolver o mejorar?\n\nAsí te puedo dar una solución precisa y un precio estimativo.`,
-                    error: true,
-                    fallback: true
-                })
-            };
+            const text = await response.text();
+            console.error('Gemini error:', response.status, text);
+            throw new Error('Error Gemini');
         }
 
-        // 8. Éxito
         const data = await response.json();
-        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                      'Perfecto, contame más sobre tu negocio para ayudarte mejor.';
+        const text =
+            data.candidates?.[0]?.content?.parts?.[0]?.text ||
+            'Perfecto, contame un poco más sobre tu negocio.';
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: aiText,
-                success: true,
-                empresa: 'Digital Rosario',
-                timestamp: new Date().toISOString()
+                text,
+                success: true
             })
         };
 
-    } catch (error) {
-        console.error('🔥 Error crítico:', error);
-        
+    } catch (err) {
+        console.error('ERROR:', err);
+
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: `Perfecto, veo que querés mejorar tu negocio.\n\nPara darte una propuesta personalizada, contame:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés lograr con un sistema digital?\n\nO si preferís, escribinos directo a WhatsApp: https://wa.me/5493417558966`,
-                error: error.message,
+                text:
+                    'Perfecto. Para ayudarte mejor, contame qué tipo de negocio tenés y qué querés mejorar. ' +
+                    'Si preferís, escribinos directo por WhatsApp: https://wa.me/5493417558966',
                 fallback: true
             })
         };
