@@ -1,6 +1,6 @@
 // public/script.js - SISTEMA COMPLETO DE CHAT CON HISTORIAL
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Digital Rosario - Sistema cargado con Gemini 2.5 Pro');
+    console.log('🚀 Digital Rosario - Sistema cargado con Gemini 2.5 Flash');
     
     // ===== VARIABLES GLOBALES =====
     let isTyping = false;
@@ -44,15 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Configurar eventos
         setupEventListeners();
-        
-        // Configurar tarjetas de servicio
-        setupServiceCards();
-        
-        // Configurar menú móvil
-        setupMobileMenu();
-        
-        // Configurar animaciones
-        setupAnimations();
         
         console.log('✅ Sistema inicializado. Historial:', messageHistory.length, 'mensajes');
     }
@@ -157,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showTypingIndicator() {
         const typingId = 'typing-' + Date.now();
         const typingDiv = document.createElement('div');
-        typingId.id = typingId;
+        typingDiv.id = typingId; // CORRECCIÓN: Cambiado typingId.id a typingDiv.id
         typingDiv.className = 'message ai typing';
         typingDiv.innerHTML = `
             <div class="message-content">
@@ -269,116 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-        
-        // Scroll para ocultar/mostrar header
-        let lastScrollTop = 0;
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const header = document.querySelector('.main-header');
-            
-            if (header) {
-                if (scrollTop > lastScrollTop && scrollTop > 100) {
-                    header.classList.add('hidden');
-                } else {
-                    header.classList.remove('hidden');
-                }
-            }
-            lastScrollTop = scrollTop;
-        });
-        
-        // Cerrar menú al hacer clic en enlaces
-        document.querySelectorAll('.main-nav a').forEach(link => {
-            link.addEventListener('click', () => {
-                if (elements.mainNav && window.innerWidth <= 768) {
-                    elements.mainNav.classList.remove('active');
-                    elements.mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            });
-        });
-    }
-    
-    function setupMobileMenu() {
-        if (elements.mobileMenuBtn && elements.mainNav) {
-            elements.mobileMenuBtn.addEventListener('click', () => {
-                elements.mainNav.classList.toggle('active');
-                const icon = elements.mobileMenuBtn.querySelector('i');
-                if (elements.mainNav.classList.contains('active')) {
-                    icon.className = 'fas fa-times';
-                } else {
-                    icon.className = 'fas fa-bars';
-                }
-            });
-        }
-    }
-    
-    function setupServiceCards() {
-        document.querySelectorAll('.service-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const service = this.getAttribute('data-service') || 'servicio';
-                let message = '';
-                
-                switch(service) {
-                    case 'whatsapp':
-                        message = 'Me interesa el Bot de WhatsApp. ¿Cómo funciona exactamente?';
-                        break;
-                    case 'web':
-                        message = 'Quiero saber más sobre la web catálogo. ¿Qué incluye?';
-                        break;
-                    case 'quotes':
-                        message = 'Me interesan los presupuestos automáticos con IA. ¿Cómo trabajan?';
-                        break;
-                    case 'marketing':
-                        message = 'Quiero info sobre marketing digital para mi negocio.';
-                        break;
-                    case 'ads':
-                        message = 'Me interesa la publicidad digital. ¿En qué redes trabajan?';
-                        break;
-                    case 'content':
-                        message = 'Necesito imágenes y videos profesionales para mi negocio.';
-                        break;
-                    case 'automation':
-                        message = 'Quiero automatizar procesos en mi negocio. ¿Qué pueden hacer?';
-                        break;
-                    default:
-                        message = `Me interesa este servicio. ¿Podrían darme más información?`;
-                }
-                
-                if (elements.userInput) {
-                    elements.userInput.value = message;
-                    elements.userInput.focus();
-                    elements.userInput.dispatchEvent(new Event('input'));
-                    
-                    // Abrir chat si está cerrado
-                    if (elements.chatBody && elements.chatBody.classList.contains('collapsed')) {
-                        toggleChat();
-                    }
-                    
-                    // Scroll suave al chat
-                    elements.chatWidget.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                }
-            });
-        });
-    }
-    
-    function setupAnimations() {
-        // Intersection Observer para animaciones
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animated');
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        });
-        
-        document.querySelectorAll('.problem-card, .service-card, .step, .stat').forEach(el => {
-            observer.observe(el);
-        });
     }
     
     // ===== CHAT LOGIC =====
@@ -426,18 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
             removeTypingIndicator(typingId);
             
             // Respuesta de fallback
-            addMessage(`¡Hola! Veo que hay un problema técnico momentáneo. 😅
-
-Te sugiero:
-
-📱 **Contactar por WhatsApp directo:** 
-<a href="${WHATSAPP_URL}" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: underline;">
-    Hacé clic aquí para chatear ahora mismo
-</a>
-
-O intentá de nuevo en un momento.
-
-Mientras tanto, contame: ¿qué tipo de negocio tenés?`, 'ai');
+            addMessage(`¡Hola! Para darte una mejor atención, contame:\n\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés mejorar o automatizar?\n\nAsí te puedo ayudar con una solución concreta.`, 'ai');
         } finally {
             isTyping = false;
         }
@@ -445,7 +315,7 @@ Mientras tanto, contame: ¿qué tipo de negocio tenés?`, 'ai');
     
     async function callAI(userMessage, history) {
         try {
-            console.log('🤖 Enviando a Gemini 2.5 Pro:', userMessage.substring(0, 50));
+            console.log('🤖 Enviando a Gemini 2.5 Flash:', userMessage.substring(0, 50));
             
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
@@ -468,7 +338,7 @@ Mientras tanto, contame: ¿qué tipo de negocio tenés?`, 'ai');
                 throw new Error(data.error);
             }
             
-            return data.text || 'Perfecto, contame más sobre tu negocio para ayudarte mejor.';
+            return data.text || '¡Hola! Contame más sobre tu negocio para ayudarte mejor.';
             
         } catch (error) {
             console.error('❌ Error en callAI:', error);
@@ -507,5 +377,5 @@ Mientras tanto, contame: ¿qué tipo de negocio tenés?`, 'ai');
         }
     };
     
-    console.log('🎯 Digital Rosario con Gemini 2.5 Pro listo para usar.');
+    console.log('🎯 Digital Rosario con Gemini 2.5 Flash listo para usar.');
 });
