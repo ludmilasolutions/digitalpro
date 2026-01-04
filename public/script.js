@@ -1,6 +1,6 @@
-// script.js - SISTEMA COMPLETO CON EFECTOS Y ANIMACIONES
+// public/script.js - SISTEMA COMPLETO DE CHAT CON HISTORIAL
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Digital Rosario - Sistema cargado');
+    console.log('🚀 Digital Rosario - Sistema cargado con Gemini 2.5 Pro');
     
     // ===== VARIABLES GLOBALES =====
     let isTyping = false;
@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let messageHistory = [];
     const API_ENDPOINT = '/.netlify/functions/gemini';
     const WHATSAPP_NUMBER = '5493417558966';
+    const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
     
     // ===== ELEMENTOS DEL DOM =====
     const elements = {
@@ -19,12 +20,13 @@ document.addEventListener('DOMContentLoaded', function() {
         chatWidget: document.getElementById('chatWidget'),
         mobileMenuBtn: document.getElementById('mobileMenuBtn'),
         mainNav: document.querySelector('.main-nav'),
-        loadingScreen: document.getElementById('loadingScreen')
+        loadingScreen: document.getElementById('loadingScreen'),
+        clearChatBtn: document.getElementById('clearChatBtn')
     };
     
     // ===== INICIALIZACIÓN =====
     function init() {
-        // Ocultar loading screen después de 2 segundos
+        // Ocultar loading screen
         setTimeout(() => {
             if (elements.loadingScreen) {
                 elements.loadingScreen.style.opacity = '0';
@@ -32,7 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     elements.loadingScreen.style.display = 'none';
                 }, 500);
             }
-        }, 2000);
+        }, 1500);
+        
+        // Cargar historial desde localStorage
+        loadMessageHistory();
         
         // Inicializar chat
         initChat();
@@ -46,24 +51,50 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configurar menú móvil
         setupMobileMenu();
         
-        // Configurar scroll animations
-        setupScrollAnimations();
+        // Configurar animaciones
+        setupAnimations();
         
-        // Configurar intersection observer para animaciones
-        setupIntersectionObserver();
-        
-        console.log('✅ Sistema completamente inicializado');
+        console.log('✅ Sistema inicializado. Historial:', messageHistory.length, 'mensajes');
     }
     
     // ===== CHAT FUNCTIONS =====
     function initChat() {
         if (!elements.chatMessages || isChatInitialized) return;
         
-        // Agregar mensaje inicial con animación
+        // Si hay historial previo, mostrarlo
+        if (messageHistory.length > 0) {
+            renderMessageHistory();
+            isChatInitialized = true;
+            return;
+        }
+        
+        // Agregar mensaje inicial
         setTimeout(() => {
             addMessage('¡Hola! Soy Digital Rosario, tu asesor digital. Ayudo a negocios como el tuyo a vender más y trabajar menos. ¿Me contás qué tipo de negocio tenés? 👋', 'ai');
             isChatInitialized = true;
         }, 1000);
+    }
+    
+    function renderMessageHistory() {
+        if (!elements.chatMessages) return;
+        
+        elements.chatMessages.innerHTML = '';
+        
+        messageHistory.forEach(msg => {
+            if (msg.role === 'system') return;
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${msg.role === 'user' ? 'user' : 'ai'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = `<p>${formatMessageText(msg.content)}</p>`;
+            
+            msgDiv.appendChild(contentDiv);
+            elements.chatMessages.appendChild(msgDiv);
+        });
+        
+        scrollToBottom();
     }
     
     function addMessage(text, sender = 'ai') {
@@ -78,40 +109,36 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        
-        // Formatear texto con soporte para HTML seguro
-        const formattedText = formatMessageText(text);
-        contentDiv.innerHTML = `<p>${formattedText}</p>`;
+        contentDiv.innerHTML = `<p>${formatMessageText(text)}</p>`;
         
         msgDiv.appendChild(contentDiv);
         elements.chatMessages.appendChild(msgDiv);
         
-        // Animar entrada del mensaje
+        // Animar entrada
         setTimeout(() => {
             msgDiv.style.opacity = '1';
             msgDiv.style.transform = 'translateX(0)';
-            msgDiv.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            msgDiv.style.transition = 'all 0.3s ease';
         }, 50);
         
         // Scroll al final
         scrollToBottom();
         
         // Agregar al historial
-        messageHistory.push({
+        const messageData = {
             id: messageId,
             role: sender === 'user' ? 'user' : 'assistant',
             content: text,
             timestamp: new Date().toISOString()
-        });
+        };
         
-        // Limitar historial
-        if (messageHistory.length > 20) {
-            messageHistory = messageHistory.slice(-20);
-        }
+        messageHistory.push(messageData);
+        saveMessageHistory();
         
-        // Verificar si el mensaje menciona WhatsApp para mostrar CTA
-        if (sender === 'ai' && (text.includes('WhatsApp') || text.includes('whatsapp'))) {
-            setTimeout(() => addWhatsAppCTA(), 300);
+        // Limitar historial a 50 mensajes
+        if (messageHistory.length > 50) {
+            messageHistory = messageHistory.slice(-50);
+            saveMessageHistory();
         }
         
         return messageId;
@@ -124,18 +151,21 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/>/g, '&gt;')
             .replace(/\n/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code>$1</code>');
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
     }
     
     function showTypingIndicator() {
         const typingId = 'typing-' + Date.now();
         const typingDiv = document.createElement('div');
-        typingDiv.id = typingId;
+        typingId.id = typingId;
         typingDiv.className = 'message ai typing';
         typingDiv.innerHTML = `
             <div class="message-content">
-                <p><i class="fas fa-ellipsis-h"></i> Escribiendo...</p>
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </div>
         `;
         elements.chatMessages.appendChild(typingDiv);
@@ -145,11 +175,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function removeTypingIndicator(typingId) {
         const typingElement = document.getElementById(typingId);
-        if (typingElement && typingElement.parentNode === elements.chatMessages) {
+        if (typingElement) {
             typingElement.style.opacity = '0';
             typingElement.style.transform = 'translateY(-10px)';
             setTimeout(() => {
-                if (typingElement.parentNode === elements.chatMessages) {
+                if (typingElement.parentNode) {
                     typingElement.remove();
                 }
             }, 300);
@@ -167,16 +197,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // ===== STORAGE FUNCTIONS =====
+    function saveMessageHistory() {
+        try {
+            localStorage.setItem('digitalRosarioChatHistory', JSON.stringify(messageHistory));
+        } catch (e) {
+            console.warn('No se pudo guardar el historial en localStorage');
+        }
+    }
+    
+    function loadMessageHistory() {
+        try {
+            const saved = localStorage.getItem('digitalRosarioChatHistory');
+            if (saved) {
+                messageHistory = JSON.parse(saved) || [];
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar el historial desde localStorage');
+            messageHistory = [];
+        }
+    }
+    
+    function clearMessageHistory() {
+        messageHistory = [];
+        localStorage.removeItem('digitalRosarioChatHistory');
+        
+        if (elements.chatMessages) {
+            elements.chatMessages.innerHTML = '';
+        }
+        
+        isChatInitialized = false;
+        initChat();
+    }
+    
     // ===== EVENT HANDLERS =====
     function setupEventListeners() {
         // Toggle del chat
-        if (elements.chatToggle && elements.chatBody) {
+        if (elements.chatToggle) {
             elements.chatToggle.addEventListener('click', toggleChat);
         }
         
         // Enviar mensaje
         if (elements.sendButton) {
             elements.sendButton.addEventListener('click', sendUserMessage);
+        }
+        
+        // Limpiar chat
+        if (elements.clearChatBtn) {
+            elements.clearChatBtn.addEventListener('click', clearMessageHistory);
         }
         
         // Enter en textarea
@@ -194,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
             
-            // Focus en el chat cuando se hace clic
+            // Focus en el chat
             elements.userInput.addEventListener('focus', () => {
                 if (elements.chatBody && elements.chatBody.classList.contains('collapsed')) {
                     toggleChat();
@@ -216,14 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             lastScrollTop = scrollTop;
-        });
-        
-        // Tabs de servicios
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tabId = this.getAttribute('data-tab');
-                switchTab(tabId, this);
-            });
         });
         
         // Cerrar menú al hacer clic en enlaces
@@ -303,6 +363,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    function setupAnimations() {
+        // Intersection Observer para animaciones
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+        
+        document.querySelectorAll('.problem-card, .service-card, .step, .stat').forEach(el => {
+            observer.observe(el);
+        });
+    }
+    
     // ===== CHAT LOGIC =====
     async function sendUserMessage() {
         if (!elements.userInput || isTyping) return;
@@ -325,8 +403,17 @@ document.addEventListener('DOMContentLoaded', function() {
         isTyping = true;
         
         try {
+            // Preparar historial para enviar (últimos 20 mensajes)
+            const historyToSend = messageHistory
+                .filter(msg => msg.role !== 'system')
+                .slice(-20)
+                .map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
+            
             // Llamar a la IA
-            const response = await callAI(message);
+            const response = await callAI(message, historyToSend);
             
             // Quitar indicador de typing
             removeTypingIndicator(typingId);
@@ -338,32 +425,27 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error en sendUserMessage:', error);
             removeTypingIndicator(typingId);
             
-            // Respuesta de fallback profesional
-            addMessage(`¡Hola! Hubo un problema técnico momentáneo. 😅
+            // Respuesta de fallback
+            addMessage(`¡Hola! Veo que hay un problema técnico momentáneo. 😅
 
 Te sugiero:
 
 📱 **Contactar por WhatsApp directo:** 
-<a href="https://wa.me/${WHATSAPP_NUMBER}" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: underline;">
+<a href="${WHATSAPP_URL}" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: underline;">
     Hacé clic aquí para chatear ahora mismo
 </a>
 
-💡 **O intentá de nuevo en un momento.**
+O intentá de nuevo en un momento.
 
-Mientras tanto, te cuento rápidamente:
-• **Web catálogo:** Desde $150.000
-• **Bot de WhatsApp:** Desde $80.000 + $15.000/mes
-• **Marketing digital:** Desde $45.000/mes
-
-¿Qué tipo de negocio tenés?`, 'ai');
+Mientras tanto, contame: ¿qué tipo de negocio tenés?`, 'ai');
         } finally {
             isTyping = false;
         }
     }
     
-    async function callAI(userMessage) {
+    async function callAI(userMessage, history) {
         try {
-            console.log('🤖 Enviando mensaje a IA:', userMessage.substring(0, 50));
+            console.log('🤖 Enviando a Gemini 2.5 Pro:', userMessage.substring(0, 50));
             
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
@@ -372,20 +454,21 @@ Mientras tanto, te cuento rápidamente:
                 },
                 body: JSON.stringify({
                     message: userMessage,
-                    history: messageHistory.slice(-5) // Enviar últimos 5 mensajes para contexto
+                    messages: history
                 })
             });
-            
-            console.log('📥 Status de respuesta:', response.status);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            console.log('✅ Respuesta de IA recibida');
             
-            return data.text || '¡Hola! ¿En qué puedo ayudarte con tu negocio hoy?';
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            return data.text || 'Perfecto, contame más sobre tu negocio para ayudarte mejor.';
             
         } catch (error) {
             console.error('❌ Error en callAI:', error);
@@ -402,117 +485,10 @@ Mientras tanto, te cuento rápidamente:
         
         if (elements.chatBody.classList.contains('collapsed')) {
             icon.className = 'fas fa-chevron-up';
-            // Agregar animación de cierre
-            elements.chatWidget.style.animation = 'none';
-            setTimeout(() => {
-                elements.chatWidget.style.animation = 'scaleIn 0.3s ease';
-            }, 10);
         } else {
             icon.className = 'fas fa-chevron-down';
-            // Scroll al final al abrir
             setTimeout(scrollToBottom, 300);
         }
-    }
-    
-    function switchTab(tabId, clickedButton) {
-        // Remover clase active de todos los botones y contenidos
-        document.querySelectorAll('.tab-btn, .tab-content').forEach(el => {
-            el.classList.remove('active');
-        });
-        
-        // Agregar active al botón clickeado
-        clickedButton.classList.add('active');
-        
-        // Mostrar el contenido correspondiente
-        const targetTab = document.getElementById(tabId);
-        if (targetTab) {
-            targetTab.classList.add('active');
-            // Animación de entrada
-            targetTab.style.opacity = '0';
-            targetTab.style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                targetTab.style.opacity = '1';
-                targetTab.style.transform = 'translateY(0)';
-                targetTab.style.transition = 'all 0.4s ease';
-            }, 10);
-        }
-    }
-    
-    function addWhatsAppCTA() {
-        // Evitar duplicados
-        if (document.querySelector('.whatsapp-cta')) return;
-        
-        const ctaDiv = document.createElement('div');
-        ctaDiv.className = 'whatsapp-cta';
-        ctaDiv.innerHTML = `
-            <h4><i class="fab fa-whatsapp"></i> ¿Listo para avanzar?</h4>
-            <p>Continuá por WhatsApp para confirmar precios, ver ejemplos y coordinar una reunión virtual sin compromiso.</p>
-            <a href="https://wa.me/${WHATSAPP_NUMBER}" target="_blank">
-                <i class="fab fa-whatsapp"></i> Ir a WhatsApp ahora
-            </a>
-        `;
-        
-        if (elements.chatMessages) {
-            elements.chatMessages.appendChild(ctaDiv);
-            scrollToBottom();
-        }
-    }
-    
-    // ===== ANIMATIONS =====
-    function setupScrollAnimations() {
-        // Animar elementos al hacer scroll
-        const animatedElements = document.querySelectorAll('.problem-card, .service-card, .step, .stat');
-        
-        animatedElements.forEach((el, index) => {
-            el.style.setProperty('--animation-order', index);
-        });
-    }
-    
-    function setupIntersectionObserver() {
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animated');
-                }
-            });
-        }, observerOptions);
-        
-        // Observar elementos para animaciones
-        document.querySelectorAll('.problem-card, .service-card, .step, .stat').forEach(el => {
-            observer.observe(el);
-        });
-    }
-    
-    // ===== UTILITY FUNCTIONS =====
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-    
-    function throttle(func, limit) {
-        let inThrottle;
-        return function() {
-            const args = arguments;
-            const context = this;
-            if (!inThrottle) {
-                func.apply(context, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        };
     }
     
     // ===== INITIALIZE =====
@@ -523,16 +499,13 @@ Mientras tanto, te cuento rápidamente:
         addMessage,
         sendUserMessage,
         toggleChat,
+        clearChat: clearMessageHistory,
         messageHistory: () => messageHistory,
-        clearChat: () => {
-            if (elements.chatMessages) {
-                elements.chatMessages.innerHTML = '';
-                messageHistory = [];
-                isChatInitialized = false;
-                initChat();
-            }
+        testAPI: async () => {
+            const response = await fetch(API_ENDPOINT, { method: 'GET' });
+            return response.json();
         }
     };
     
-    console.log('🎯 Digital Rosario listo para usar. Usa DigitalRosario en la consola para debugging.');
+    console.log('🎯 Digital Rosario con Gemini 2.5 Pro listo para usar.');
 });
