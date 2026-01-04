@@ -1,4 +1,4 @@
-// netlify/functions/gemini.js - VERSIÓN CORREGIDA CON MODELO REAL
+// netlify/functions/gemini.js - SISTEMA COMPLETO CON GEMINI 2.5 FLASH
 exports.handler = async function(event, context) {
     // Configurar CORS
     const headers = {
@@ -15,9 +15,8 @@ exports.handler = async function(event, context) {
             body: JSON.stringify({ 
                 status: 'online',
                 empresa: 'Digital Rosario',
-                ia_modelo: 'Gemini 2.0 Flash Experimental',
-                timestamp: new Date().toISOString(),
-                nota: 'Modelo actual: gemini-2.0-flash-exp'
+                ia_modelo: 'Gemini 2.5 Flash',
+                timestamp: new Date().toISOString()
             })
         };
     }
@@ -47,8 +46,7 @@ exports.handler = async function(event, context) {
                 headers,
                 body: JSON.stringify({ 
                     error: 'API Key no configurada',
-                    tip: 'Configura GEMINI_API_KEY en Netlify > Environment Variables',
-                    instrucciones: '1. Ve a https://aistudio.google.com/app/apikey\n2. Crea API Key\n3. En Netlify: Site Settings > Environment Variables'
+                    tip: 'Configura GEMINI_API_KEY en Netlify > Environment Variables'
                 })
             };
         }
@@ -68,95 +66,100 @@ exports.handler = async function(event, context) {
         const userMessage = requestBody.message || '';
         const messages = requestBody.messages || [];
 
-        // 3. PROMPT CORREGIDO
-        const systemPrompt = `Eres Digital Rosario, asesor digital para negocios en Argentina. 
-Conversación natural, pregunta por el negocio y sus problemas.
-Objetivo: Recolectar información para ofrecer soluciones digitales.
-Cuando tengas datos suficientes, invita a continuar por WhatsApp: https://wa.me/5493417558966
+        // 3. PROMPT EXACTO DE GEMINI (OBLIGATORIO)
+        const systemPrompt = `Actuás como un asesor comercial digital para negocios locales en Argentina.
+Este asistente utiliza como motor de inteligencia artificial Gemini 2.5 Flash.
 
-INSTRUCCIONES:
-- Hablá en español argentino
-- Sé amigable y profesional
-- Pregunta de a una cosa por vez
-- No te repitas
-- No te presentes de nuevo
-- Avanza la conversación naturalmente
+TU FUNCIÓN PRINCIPAL:
+Escuchar activamente al cliente, interpretar lo que dice, extraer información útil y completar los datos faltantes sin repetir preguntas ni reiniciar la conversación.
 
-INFORMACIÓN A OBTENER:
-1. Tipo de negocio
-2. Problema o necesidad
-3. Objetivo (ahorrar tiempo, vender más, organizarse)
-4. Presupuesto aproximado
+NO actuás como un bot con guión fijo.
+Actuás como un asesor humano con experiencia comercial.
 
-SERVICIOS QUE OFRECEMOS:
-- Webs catálogo
-- Bots de WhatsApp
-- Sistemas de gestión
+REGLAS ABSOLUTAS:
+- Nunca repitas el mismo mensaje ni estructura.
+- Nunca vuelvas a presentarte.
+- Nunca reinicies la conversación.
+- Nunca hagas más de UNA pregunta por mensaje.
+- Nunca vuelvas a preguntar algo que el cliente ya dijo.
+- Interpretá cada mensaje del cliente como información válida.
+- Si el cliente expresa una necesidad, asumila como confirmada.
+- Cada respuesta debe hacer avanzar la conversación.
+
+INFORMACIÓN A RECOLECTAR (SIN PEDIR TODO):
+- Tipo de negocio (si lo menciona)
+- Problema principal
+- Qué quiere resolver
+- Cómo trabaja hoy
+- Objetivo (orden, control, tiempo, ventas)
+
+FORMA DE RESPONDER:
+1. Confirmar brevemente lo entendido
+2. Aportar valor con una idea concreta
+3. Hacer UNA pregunta puntual
+
+SERVICIOS:
+- Sistemas web a medida
+- Aplicaciones de gestión (facturación, pedidos, control)
 - Automatizaciones
-- Marketing digital
+- Manejo de redes sociales
+- Publicidad digital
 
 PRECIOS:
-- Básico: desde $180.000
-- Avanzado: desde $350.000
+- Sistemas simples: desde $180.000 (estimativo)
 
-Al final, genera resumen y enlace a WhatsApp.`;
+CIERRE:
+Cuando la información esté completa:
+1. Generar resumen claro
+2. Preparar mensaje listo para WhatsApp
+3. Invitar a continuar por WhatsApp
 
-        // 4. Preparar historial - FORMATO CORRECTO
-        const geminiMessages = [];
-        
+WhatsApp: https://wa.me/5493417558966`;
+
+        // 4. Preparar mensajes para Gemini (según documentación oficial)
+        const contents = [
+            {
+                parts: [{ text: systemPrompt + "\n\nINICIA LA CONVERSACIÓN:" }]
+            }
+        ];
+
         // Agregar historial de conversación
-        messages.slice(-10).forEach(msg => {
-            geminiMessages.push({
-                role: msg.role === 'user' ? 'user' : 'model',
-                parts: [{ text: msg.content }]
-            });
+        messages.forEach(msg => {
+            if (msg.role && msg.content) {
+                contents.push({
+                    parts: [{ text: msg.content }]
+                });
+            }
         });
 
         // Agregar último mensaje del usuario
         if (userMessage) {
-            geminiMessages.push({
-                role: "user",
+            contents.push({
                 parts: [{ text: userMessage }]
             });
         }
 
-        // 5. Payload CORRECTO para Gemini 2.0 Flash Experimental
+        console.log('🤖 Enviando a Gemini 2.5 Flash...');
+        console.log('Historial:', messages.length, 'mensajes');
+
+        // 5. Payload según documentación oficial
         const payload = {
-            contents: [
-                {
-                    role: "user",
-                    parts: [{ text: systemPrompt + "\n\nHistorial de chat:\n" + JSON.stringify(geminiMessages) }]
-                }
-            ],
+            contents: contents,
             generationConfig: {
-                temperature: 0.8,
-                topP: 0.9,
+                temperature: 0.7,
+                topP: 0.8,
                 topK: 40,
-                maxOutputTokens: 1000,
-            },
-            safetySettings: [
-                {
-                    category: "HARM_CATEGORY_HARASSMENT",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    category: "HARM_CATEGORY_HATE_SPEECH",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                }
-            ]
+                maxOutputTokens: 800,
+            }
         };
 
-        console.log('🤖 Enviando a Gemini 2.0 Flash Experimental...');
-        console.log('Mensaje del usuario:', userMessage.substring(0, 100));
-
-        // 6. Llamar a Gemini API - ENDPOINT CORRECTO
+        // 6. Llamar a Gemini 2.5 Flash API (CORRECTO según docs)
         const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': API_KEY
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             }
@@ -167,26 +170,12 @@ Al final, genera resumen y enlace a WhatsApp.`;
             const errorText = await response.text();
             console.error('❌ Error Gemini:', response.status, errorText.substring(0, 200));
             
-            // Respuesta de fallback más inteligente
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
-                    text: `¡Hola! Soy Digital Rosario, tu asesor digital. 🚀
-
-Parece que hay un pequeño problema técnico, pero igual puedo ayudarte.
-
-¿Me contás qué tipo de negocio tenés y qué te gustaría mejorar?
-
-Por ejemplo:
-• ¿Tenés un local, servicio o vendés online?
-• ¿Qué problema querés resolver? (tiempo, ventas, organización)
-• ¿Tenés un presupuesto aproximado?
-
-Así te puedo orientar mejor con soluciones digitales. 😊
-
-O si preferís, hablamos directo por WhatsApp: https://wa.me/5493417558966`,
-                    error: false,
+                    text: `¡Hola! Perfecto, te escucho.\n\nPara ayudarte mejor, contame:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés lograr o mejorar con tecnología?\n\nAsí te puedo dar una propuesta concreta y precio estimativo.`,
+                    error: true,
                     fallback: true
                 })
             };
@@ -194,10 +183,8 @@ O si preferís, hablamos directo por WhatsApp: https://wa.me/5493417558966`,
 
         // 8. Éxito
         const data = await response.json();
-        console.log('✅ Respuesta de Gemini recibida');
-        
         const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                      '¡Hola! ¿En qué puedo ayudarte con tu negocio hoy? Cuéntame qué hacés y qué necesitás mejorar.';
+                      '¡Hola! Contame sobre tu negocio para ayudarte mejor.';
 
         return {
             statusCode: 200,
@@ -206,7 +193,6 @@ O si preferís, hablamos directo por WhatsApp: https://wa.me/5493417558966`,
                 text: aiText,
                 success: true,
                 empresa: 'Digital Rosario',
-                modelo: 'gemini-2.0-flash-exp',
                 timestamp: new Date().toISOString()
             })
         };
@@ -218,22 +204,7 @@ O si preferís, hablamos directo por WhatsApp: https://wa.me/5493417558966`,
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: `¡Buenas! Soy Digital Rosario, asesor digital para negocios. 
-
-Ayudo a emprendedores y negocios como el tuyo a:
-• Vender más con menos esfuerzo
-• Organizar procesos digitalmente
-• Atraer clientes nuevos
-• Automatizar tareas repetitivas
-
-Contame:
-1. ¿Qué tipo de negocio tenés?
-2. ¿Qué desafío te gustaría resolver?
-
-O si querés, hablamos directo por WhatsApp: 
-👉 https://wa.me/5493417558966
-
-¡Estoy aquí para ayudarte! 💪`,
+                text: `¡Hola! Veo que querés mejorar tu negocio.\n\nPara darte una propuesta personalizada:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué problema querés resolver?\n\nO si preferís, escribinos directo:\n📱 https://wa.me/5493417558966`,
                 error: error.message,
                 fallback: true
             })
