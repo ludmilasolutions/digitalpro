@@ -1,4 +1,4 @@
-// netlify/functions/gemini.js - FUNCIÓN MEJORADA PARA DIGITAL ROSARIO
+// netlify/functions/gemini.js - SISTEMA COMPLETO CON GEMINI 2.5 PRO
 exports.handler = async function(event, context) {
     // Configurar CORS
     const headers = {
@@ -14,8 +14,8 @@ exports.handler = async function(event, context) {
             headers,
             body: JSON.stringify({ 
                 status: 'online',
-                message: 'Asesor Digital Rosario - Funcionando',
                 empresa: 'Digital Rosario',
+                ia_modelo: 'Gemini 2.5 Pro',
                 timestamp: new Date().toISOString()
             })
         };
@@ -63,151 +63,110 @@ exports.handler = async function(event, context) {
             };
         }
 
-        const userMessage = requestBody.message || 'Hola';
+        const userMessage = requestBody.message || '';
+        const messages = requestBody.messages || [];
 
-        // 3. PROMPT PROFESIONAL MEJORADO PARA DIGITAL ROSARIO
-        const systemPrompt = `
-Actuás como un ASESOR COMERCIAL DIGITAL PROFESIONAL para negocios locales en Argentina.
+        // 3. PROMPT EXACTO DE GEMINI (OBLIGATORIO)
+        const systemPrompt = `Actuás como un asesor comercial digital para negocios locales en Argentina.
+Este asistente utiliza como motor de inteligencia artificial Gemini 2.5 Pro.
 
-────────────────────────
-REGLAS CRÍTICAS (OBLIGATORIAS)
-────────────────────────
-- Nunca repitas el mismo texto ni estructura de mensaje.
-- Nunca vuelvas a presentarte si ya hablaste antes.
+TU FUNCIÓN PRINCIPAL:
+Escuchar activamente al cliente, interpretar lo que dice, extraer información útil y completar los datos faltantes sin repetir preguntas ni reiniciar la conversación.
+
+NO actuás como un bot con guión fijo.
+Actuás como un asesor humano con experiencia comercial.
+
+REGLAS ABSOLUTAS:
+- Nunca repitas el mismo mensaje ni estructura.
+- Nunca vuelvas a presentarte.
 - Nunca reinicies la conversación.
-- Si el cliente responde algo, tomalo como dato confirmado.
-- No vuelvas a preguntar información ya dada.
-- Hacé UNA sola pregunta por mensaje.
-- Cada respuesta del cliente debe hacer avanzar la conversación un paso.
-- Pensá y respondé como un vendedor humano con experiencia.
+- Nunca hagas más de UNA pregunta por mensaje.
+- Nunca vuelvas a preguntar algo que el cliente ya dijo.
+- Interpretá cada mensaje del cliente como información válida.
+- Si el cliente expresa una necesidad, asumila como confirmada.
+- Cada respuesta debe hacer avanzar la conversación.
 
-────────────────────────
-OBJETIVO
-────────────────────────
-- Detectar la necesidad principal del negocio
-- Proponer una solución concreta y clara
-- Explicar todo sin tecnicismos
-- Dar precios estimativos en pesos argentinos
-- Preparar el cierre por WhatsApp
+INFORMACIÓN A RECOLECTAR (SIN PEDIR TODO):
+- Tipo de negocio (si lo menciona)
+- Problema principal
+- Qué quiere resolver
+- Cómo trabaja hoy
+- Objetivo (orden, control, tiempo, ventas)
 
-────────────────────────
-ESTILO DE RESPUESTA
-────────────────────────
-- Español argentino natural
-- Mensajes cortos
-- Tono profesional y cercano
-- Enfocado en ayudar y vender sin presión
+FORMA DE RESPONDER:
+1. Confirmar brevemente lo entendido
+2. Aportar valor con una idea concreta
+3. Hacer UNA pregunta puntual
 
-────────────────────────
-FLUJO DE CONVERSACIÓN (NO RETROCEDER)
-────────────────────────
-
-ETAPA 1 – DIAGNÓSTICO
-- Confirmar tipo de negocio SOLO si no fue dicho
-- Detectar qué quiere resolver
-- 1 pregunta puntual
-
-ETAPA 2 – SOLUCIÓN PRINCIPAL
-- Proponer la solución más directa al problema
-- Usar ejemplos aplicados al rubro
-
-ETAPA 3 – COMPLEMENTOS (SOLO SI SUMAN VALOR)
-- Ofrecer publicidad o redes como apoyo
-- Nunca ofrecer todo junto
-
-ETAPA 4 – PRECIO
-- Dar rango estimativo
-- Aclarar que se ajusta según necesidad
-
-ETAPA 5 – CIERRE
-- Resumen corto
-- Derivar a WhatsApp
-
-────────────────────────
-CASO ESPECIAL: ROTISERÍA
-────────────────────────
-Si el negocio es una rotisería, priorizá:
-- Aplicación web de pedidos
-- Menú digital con precios
-- Pedidos ordenados por WhatsApp
-- Horarios
-- Delivery o retiro
-- Menos llamadas y mensajes mezclados
-
-Ejemplo de explicación:
-“Una app simple donde el cliente ve el menú, elige y el pedido te llega ordenado por WhatsApp.”
-
-Luego, si tiene sentido:
-- Publicidad en Instagram/Facebook
-- Manejo de redes para mostrar platos y promos
-
-────────────────────────
-SERVICIOS DISPONIBLES
-────────────────────────
-SOLUCIONES OPERATIVAS:
-- Aplicaciones web a medida (pedidos, gestión, catálogos)
-- Web catálogo
-- Bot de WhatsApp
-- Presupuestos automáticos
-- Automatizaciones personalizadas
-
-SOLUCIONES DE VISIBILIDAD:
+SERVICIOS:
+- Sistemas web a medida
+- Aplicaciones de gestión (facturación, pedidos, control)
+- Automatizaciones
 - Manejo de redes sociales
-- Creación de contenido (imágenes y videos)
-- Publicidad digital (Instagram, Facebook, Google)
+- Publicidad digital
 
-────────────────────────
-PRECIOS ESTIMATIVOS
-────────────────────────
-- App de pedidos para rotisería: desde $180.000
-- Web catálogo: desde $150.000
-- Bot de WhatsApp: desde $80.000 + mantenimiento
-- Manejo de redes: desde $45.000 por mes
-- Publicidad: desde $30.000 + inversión en anuncios
-- Automatizaciones: a cotizar
+PRECIOS:
+- Sistemas simples: desde $180.000 (estimativo)
 
-────────────────────────
-CIERRE
-────────────────────────
-Cuando tengas:
-- Tipo de negocio
-- Necesidad principal clara
-- Objetivo definido
+CIERRE:
+Cuando la información esté completa:
+1. Generar resumen claro
+2. Preparar mensaje listo para WhatsApp
+3. Invitar a continuar por WhatsApp
 
-Hacé:
-1. Resumen corto
-2. Invitación directa a WhatsApp
+WhatsApp: https://wa.me/5493417558966`;
 
-WhatsApp: https://wa.me/5493417558966
+        // 4. Preparar historial de mensajes para Gemini
+        const geminiMessages = [
+            {
+                role: "user",
+                parts: [{ text: systemPrompt + "\n\nINICIA LA CONVERSACIÓN:" }]
+            }
+        ];
 
-────────────────────────
-CONTEXTO DEL CLIENTE
-────────────────────────
-Mensaje del cliente:
-"${userMessage}"
+        // Agregar historial de conversación
+        messages.forEach(msg => {
+            geminiMessages.push({
+                role: msg.role === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.content }]
+            });
+        });
 
-Respondé como asesor comercial profesional, sin repetir textos y avanzando hacia el cierre.
+        // Agregar último mensaje del usuario
+        if (userMessage) {
+            geminiMessages.push({
+                role: "user",
+                parts: [{ text: userMessage }]
+            });
+        }
 
-`;
-
-        // 4. Payload para Gemini
+        // 5. Payload para Gemini 2.5 Pro
         const payload = {
-            contents: [{
-                parts: [{ text: systemPrompt }]
-            }],
+            contents: geminiMessages,
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.8,
                 topK: 40,
-                maxOutputTokens: 1000,
-            }
+                maxOutputTokens: 800,
+            },
+            safetySettings: [
+                {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_HATE_SPEECH",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                }
+            ]
         };
 
-        console.log('🤖 Enviando prompt mejorado a Gemini...');
+        console.log('🤖 Enviando a Gemini 2.5 Pro...');
+        console.log('Historial:', messages.length, 'mensajes');
 
-        // 5. Llamar a Gemini API
+        // 6. Llamar a Gemini 2.5 Pro API
         const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
             {
                 method: 'POST',
                 headers: {
@@ -218,27 +177,26 @@ Respondé como asesor comercial profesional, sin repetir textos y avanzando haci
             }
         );
 
-        // 6. Procesar respuesta
+        // 7. Procesar respuesta
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Error Gemini:', response.status, errorText.substring(0, 200));
             
-            // Respuesta de fallback profesional MEJORADA
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
-                    text: `Perfecto, veo que estás interesado en una aplicación.\n\nEn Digital Rosario desarrollamos TODO TIPO de aplicaciones personalizadas, adaptándonos exactamente a lo que cada cliente necesita.\n\nDecime:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés que haga la aplicación?\n\nAsí te puedo dar una propuesta concreta y un precio estimativo.`,
+                    text: `Perfecto, entiendo que querés avanzar con tu negocio.\n\nPara darte una propuesta concreta, necesito saber:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué problema querés resolver o mejorar?\n\nAsí te puedo dar una solución precisa y un precio estimativo.`,
                     error: true,
                     fallback: true
                 })
             };
         }
 
-        // 7. Éxito
+        // 8. Éxito
         const data = await response.json();
         const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                      'Perfecto, contame qué tipo de negocio tenés y qué aplicación necesitás. En Digital Rosario nos adaptamos a cada cliente.';
+                      'Perfecto, contame más sobre tu negocio para ayudarte mejor.';
 
         return {
             statusCode: 200,
@@ -258,7 +216,7 @@ Respondé como asesor comercial profesional, sin repetir textos y avanzando haci
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: `Veo que hubo un problema técnico.\n\nTe invito a escribirnos directo a WhatsApp para una atención más rápida:\n📱 https://wa.me/5493417558966\n\nEn Digital Rosario desarrollamos TODO TIPO de aplicaciones personalizadas, adaptándonos a lo que tu negocio necesite.`,
+                text: `Perfecto, veo que querés mejorar tu negocio.\n\nPara darte una propuesta personalizada, contame:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés lograr con un sistema digital?\n\nO si preferís, escribinos directo a WhatsApp: https://wa.me/5493417558966`,
                 error: error.message,
                 fallback: true
             })
