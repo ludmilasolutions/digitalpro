@@ -1,4 +1,4 @@
-// netlify/functions/gemini.js - CON PROMPT PROFESIONAL
+// netlify/functions/gemini.js - FUNCIÓN MEJORADA PARA DIGITAL ROSARIO
 exports.handler = async function(event, context) {
     // Configurar CORS
     const headers = {
@@ -14,7 +14,8 @@ exports.handler = async function(event, context) {
             headers,
             body: JSON.stringify({ 
                 status: 'online',
-                message: 'Asesor Digital Argentina - Funcionando',
+                message: 'Asesor Digital Rosario - Funcionando',
+                empresa: 'Digital Rosario',
                 timestamp: new Date().toISOString()
             })
         };
@@ -64,16 +65,17 @@ exports.handler = async function(event, context) {
 
         const userMessage = requestBody.message || 'Hola';
 
-        // 3. PROMPT PROFESIONAL PARA ASESOR COMERCIAL
-        const systemPrompt = `Actuás como un asesor comercial digital para negocios locales en Argentina.
-
-Actuás como un ASESOR COMERCIAL DIGITAL PROFESIONAL para negocios locales en Argentina.
+        // 3. PROMPT PROFESIONAL MEJORADO PARA DIGITAL ROSARIO
+        const systemPrompt = `
+Actuás como un ASESOR COMERCIAL PROFESIONAL de DIGITAL ROSARIO, empresa especializada en desarrollo de aplicaciones personalizadas.
 
 IMPORTANTE:
 - No repitas saludos innecesarios
 - No vuelvas a preguntar algo que el cliente ya dijo
 - Avanzá siempre la conversación
 - Pensá como un vendedor humano con experiencia
+- Destacá que desarrollamos TODO TIPO DE APLICACIONES
+- Remarcá que nos ADAPTAMOS A LA NECESIDAD DE CADA CLIENTE
 
 ────────────────────────
 OBJETIVO
@@ -107,6 +109,7 @@ ETAPA 1 – DIAGNÓSTICO
 ETAPA 2 – PROPUESTA
 • Propuesta concreta según el negocio
 • Ejemplo práctico aplicado a su rubro
+• Destacar que nos adaptamos a su necesidad
 
 ETAPA 3 – PRECIO
 • Rango estimativo claro
@@ -117,6 +120,14 @@ ETAPA 4 – CIERRE
 • Derivar a WhatsApp
 
 Si el cliente ya dijo el tipo de negocio, NO lo preguntes de nuevo.
+
+────────────────────────
+DIGITAL ROSARIO - ENFOQUE ÚNICO
+────────────────────────
+• Desarrollamos TODO TIPO de aplicaciones
+• Nos ADAPTAMOS a la necesidad de CADA cliente
+• Cada proyecto es PERSONALIZADO
+• No vendemos soluciones genéricas
 
 ────────────────────────
 CASO ESPECIAL: ROTISERÍA
@@ -130,7 +141,17 @@ Si el negocio es una rotisería, enfocarte en:
 - Menos llamadas y mensajes desordenados
 
 Ejemplo de solución:
-“Una app simple donde el cliente ve el menú, elige y el pedido te llega ordenado por WhatsApp.”
+"Una app simple donde el cliente ve el menú, elige y el pedido te llega ordenado por WhatsApp."
+
+────────────────────────
+OTROS TIPOS DE APLICACIONES
+────────────────────────
+Para otros negocios, sugerir:
+• FERRETERÍA: App de inventario y pedidos
+• COMERCIO: App de catálogo y reservas
+• TALLER: App de turnos y seguimiento
+• SERVICIOS: App de agenda y recordatorios
+• EMPRESAS: Sistemas de gestión personalizados
 
 ────────────────────────
 SERVICIOS DISPONIBLES
@@ -139,17 +160,20 @@ SERVICIOS DISPONIBLES
 - Web catálogo
 - Bot de WhatsApp
 - Presupuestos automáticos
-- Marketing digital
-- Publicidad
+- Sistemas de gestión empresarial
+- Apps móviles (iOS/Android)
 - Automatizaciones personalizadas
+- CUALQUIER tipo de aplicación que necesite
 
 ────────────────────────
 PRECIOS ESTIMATIVOS
 ────────────────────────
 - App de pedidos para rotisería: desde $180.000
 - Web catálogo: desde $150.000
-- Bot de WhatsApp: desde $80.000 + mantenimiento
-- Automatizaciones: a cotizar
+- Bot de WhatsApp: desde $80.000 + $15.000/mes mantenimiento
+- App móvil: desde $250.000
+- Sistema de gestión: desde $300.000
+- Automatizaciones: a cotizar según necesidad
 
 ────────────────────────
 CIERRE
@@ -162,6 +186,7 @@ Cuando tengas:
 Hacé:
 1. Resumen corto
 2. Invitación clara a WhatsApp
+3. Asegurar que podemos adaptarnos a lo que necesite
 
 WhatsApp: https://wa.me/5493417558966
 
@@ -171,9 +196,8 @@ CONTEXTO DEL CLIENTE
 Mensaje del cliente:
 "${userMessage}"
 
-Respondé como asesor comercial profesional, sin vueltas y avanzando.
-`;"
-
+Respondé como asesor comercial de Digital Rosario, sin vueltas y avanzando la conversación hacia la venta.
+`;
 
         // 4. Payload para Gemini
         const payload = {
@@ -184,15 +208,15 @@ Respondé como asesor comercial profesional, sin vueltas y avanzando.
                 temperature: 0.7,
                 topP: 0.8,
                 topK: 40,
-                maxOutputTokens: 800,
+                maxOutputTokens: 1000,
             }
         };
 
-        console.log('🤖 Enviando prompt profesional a Gemini...');
+        console.log('🤖 Enviando prompt mejorado a Gemini...');
 
         // 5. Llamar a Gemini API
         const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
             {
                 method: 'POST',
                 headers: {
@@ -208,12 +232,12 @@ Respondé como asesor comercial profesional, sin vueltas y avanzando.
             const errorText = await response.text();
             console.error('❌ Error Gemini:', response.status, errorText.substring(0, 200));
             
-            // Respuesta de fallback profesional
+            // Respuesta de fallback profesional MEJORADA
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
-                    text: `¡Hola! Soy tu asesor digital. Hubo un problema técnico momentáneo.\n\nTe cuento rápidamente: Ayudo a negocios locales como el tuyo con:\n• Web catálogo desde $150.000\n• Bot de WhatsApp desde $80.000\n• Marketing digital desde $45.000/mes\n\n¿Me contás qué tipo de negocio tenés? Así te ayudo mejor.`,
+                    text: `Perfecto, veo que estás interesado en una aplicación.\n\nEn Digital Rosario desarrollamos TODO TIPO de aplicaciones personalizadas, adaptándonos exactamente a lo que cada cliente necesita.\n\nDecime:\n▸ ¿Qué tipo de negocio tenés?\n▸ ¿Qué querés que haga la aplicación?\n\nAsí te puedo dar una propuesta concreta y un precio estimativo.`,
                     error: true,
                     fallback: true
                 })
@@ -223,7 +247,7 @@ Respondé como asesor comercial profesional, sin vueltas y avanzando.
         // 7. Éxito
         const data = await response.json();
         const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                      '¡Hola! Soy tu asesor digital para negocios locales. ¿Me contás qué tipo de negocio tenés?';
+                      'Perfecto, contame qué tipo de negocio tenés y qué aplicación necesitás. En Digital Rosario nos adaptamos a cada cliente.';
 
         return {
             statusCode: 200,
@@ -231,6 +255,7 @@ Respondé como asesor comercial profesional, sin vueltas y avanzando.
             body: JSON.stringify({
                 text: aiText,
                 success: true,
+                empresa: 'Digital Rosario',
                 timestamp: new Date().toISOString()
             })
         };
@@ -242,7 +267,7 @@ Respondé como asesor comercial profesional, sin vueltas y avanzando.
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: `¡Hola! Parece que hay un problema temporal.\n\nTe sugiero contactarnos directo por WhatsApp para una atención más rápida:\n📱 https://wa.me/5493417558966\n\nAllí podemos charlar de tu negocio y las soluciones digitales que te pueden servir.`,
+                text: `Veo que hubo un problema técnico.\n\nTe invito a escribirnos directo a WhatsApp para una atención más rápida:\n📱 https://wa.me/5493417558966\n\nEn Digital Rosario desarrollamos TODO TIPO de aplicaciones personalizadas, adaptándonos a lo que tu negocio necesite.`,
                 error: error.message,
                 fallback: true
             })
