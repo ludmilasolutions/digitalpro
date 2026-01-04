@@ -1,4 +1,4 @@
-// public/script.js - SISTEMA COMPLETO DE CHAT CON CALIFICACIÓN COMERCIAL
+// public/script.js - CORRECCIÓN DEL MANEJO DE ERRORES
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Digital Rosario - Sistema cargado con Calificador Comercial');
     
@@ -479,14 +479,21 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
             
             const data = await response.json();
             
-            if (data.error) {
+            // Manejar respuesta de error de manera diferente
+            if (data.error && data.error !== "API Key no configurada") {
+                // Si hay error pero no es crítico, usar el texto de fallback
+                if (data.text) {
+                    return data.text;
+                }
                 throw new Error(data.error);
             }
             
+            // Si no hay error, devolver el texto
             return data.text || 'Gracias por la información. ¿Podrías contarme un poco más sobre cómo llegan los clientes a tu negocio hoy?';
             
         } catch (error) {
             console.error('❌ Error en callAI:', error);
+            // Lanzar error para que sendUserMessage lo maneje con el fallback
             throw error;
         }
     }
