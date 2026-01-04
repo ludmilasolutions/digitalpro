@@ -1,61 +1,63 @@
-// netlify/functions/gemini.js
-// SISTEMA ESTABLE CON GEMINI 2.5 FLASH (PRODUCCIÓN)
-
-exports.handler = async function (event, context) {
-    // ===== CORS =====
+// netlify/functions/gemini.js - VERSIÓN CORREGIDA
+exports.handler = async function(event, context) {
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS, GET'
     };
 
-    // ===== GET (TEST) =====
+    // Manejar OPTIONS (preflight)
+    if (event.httpMethod === 'OPTIONS') {
+        return { 
+            statusCode: 200, 
+            headers, 
+            body: '' 
+        };
+    }
+
+    // Para pruebas GET
     if (event.httpMethod === 'GET') {
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({
+            body: JSON.stringify({ 
                 status: 'online',
-                empresa: 'Digital Rosario',
-                ia_modelo: 'Gemini 2.5 Flash',
+                message: 'Gemini API funcionando',
                 timestamp: new Date().toISOString()
             })
         };
     }
 
-    // ===== OPTIONS =====
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
-    // ===== SOLO POST =====
+    // Solo POST para el chat
     if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers,
-            body: JSON.stringify({ error: 'Método no permitido. Usa POST.' })
+        return { 
+            statusCode: 405, 
+            headers, 
+            body: JSON.stringify({ error: 'Método no permitido' }) 
         };
     }
 
     try {
-        // ===== API KEY =====
+        // 1. Verificar API Key
         const API_KEY = process.env.GEMINI_API_KEY;
-
+        
         if (!API_KEY) {
+            console.error('❌ GEMINI_API_KEY no configurada');
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({
-                    error: 'GEMINI_API_KEY no configurada'
+                body: JSON.stringify({ 
+                    error: 'API Key no configurada',
+                    tip: 'Configura GEMINI_API_KEY en Netlify'
                 })
             };
         }
 
-        // ===== BODY =====
-        let body;
+        // 2. Parsear entrada
+        let requestBody;
         try {
-            body = JSON.parse(event.body);
-        } catch {
+            requestBody = JSON.parse(event.body);
+        } catch(e) {
             return {
                 statusCode: 400,
                 headers,
@@ -63,86 +65,48 @@ exports.handler = async function (event, context) {
             };
         }
 
-        const userMessage = body.message || '';
-        const messages = body.messages || [];
+        const userMessage = requestBody.message || '';
+        const messages = requestBody.messages || [];
 
-        // ===== SYSTEM PROMPT (CORRECTO) =====
-        const systemPrompt = `
-Actuás como un asesor comercial digital para negocios locales en Argentina.
-Motor de IA: Gemini 2.5 Flash.
+        // 3. Construir el sistema prompt
+        const systemPrompt = `Eres un asesor comercial para negocios locales en Argentina. 
+Tu objetivo es ayudar a los negocios a digitalizarse.
+Responde de forma natural y conversacional.
+Pregunta por el tipo de negocio y sus necesidades.
+Ofrece soluciones como: sistemas web, aplicaciones de gestión, automatizaciones.
+Cuando tengas suficiente información, invita a continuar por WhatsApp.
+WhatsApp: https://wa.me/5493417558966`;
 
-ROL:
-Sos un asesor humano, profesional y comercial. No sos un bot.
-
-OBJETIVO:
-Entender la necesidad del cliente y avanzar hacia una solución concreta sin fricción.
-
-REGLAS ABSOLUTAS:
-- Nunca te vuelvas a presentar.
-- Nunca reinicies la conversación.
-- Nunca repitas preguntas.
-- Nunca hagas más de UNA pregunta por mensaje.
-- Interpretá lo que el cliente dice como información válida.
-- Si expresa una necesidad, asumila como confirmada.
-- Cada respuesta debe hacer avanzar la venta.
-
-FORMA DE RESPONDER:
-1. Confirmar brevemente lo entendido
-2. Aportar valor concreto
-3. Hacer UNA sola pregunta puntual
-
-SERVICIOS:
-- Sistemas web a medida
-- Apps de gestión (facturación, pedidos, control)
-- Automatizaciones
-- Manejo de redes sociales
-- Publicidad digital
-
-PRECIOS:
-- Sistemas simples desde $180.000 (estimativo)
-
-CIERRE:
-Cuando la info esté completa:
-- Resumir
-- Armar mensaje listo para WhatsApp
-- Invitar a continuar por WhatsApp
-
-WhatsApp: https://wa.me/5493417558966
-`.trim();
-
-        // ===== HISTORIAL =====
-        const contents = [];
-
-        messages.forEach(msg => {
-            contents.push({
-                role: msg.role === 'user' ? 'user' : 'model',
-                parts: [{ text: msg.content }]
-            });
+        // 4. Construir el historial de mensajes
+        let fullPrompt = systemPrompt + "\n\nHistorial de conversación:\n";
+        
+        messages.slice(-5).forEach(msg => {
+            const role = msg.role === 'user' ? 'Cliente' : 'Asistente';
+            fullPrompt += `${role}: ${msg.content}\n`;
         });
+        
+        fullPrompt += `\nCliente: ${userMessage}\nAsistente:`;
 
-        if (userMessage) {
-            contents.push({
-                role: 'user',
-                parts: [{ text: userMessage }]
-            });
-        }
-
-        // ===== PAYLOAD =====
+        // 5. Payload CORRECTO para Gemini 2.5 Flash
         const payload = {
-            systemInstruction: {
-                parts: [{ text: systemPrompt }]
-            },
-            contents,
+            contents: [
+                {
+                    parts: [
+                        { text: fullPrompt }
+                    ]
+                }
+            ],
             generationConfig: {
                 temperature: 0.7,
-                topP: 0.8,
-                maxOutputTokens: 700
+                maxOutputTokens: 800,
             }
         };
 
-        // ===== CALL GEMINI =====
+        console.log('📤 Enviando a Gemini API...');
+
+        // 6. Llamar a la API CORRECTA
         const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
             {
                 method: 'POST',
                 headers: {
@@ -153,36 +117,49 @@ WhatsApp: https://wa.me/5493417558966
             }
         );
 
+        // 7. Procesar respuesta
         if (!response.ok) {
-            const text = await response.text();
-            console.error('Gemini error:', response.status, text);
-            throw new Error('Error Gemini');
+            const errorText = await response.text();
+            console.error('❌ Error de Gemini API:', response.status, errorText);
+            
+            // Respuesta de fallback más amigable
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    text: `¡Hola! Soy tu asesor digital de Digital Rosario. 👋\n\nMe especializo en ayudar a negocios como el tuyo a crecer con tecnología.\n\n¿Me podrías contar qué tipo de negocio tenés y qué desafíos enfrentás actualmente?\n\nAsí puedo recomendarte las mejores soluciones digitales para vos.`,
+                    success: false,
+                    fallback: true
+                })
+            };
         }
 
+        // 8. Extraer respuesta
         const data = await response.json();
-        const text =
-            data.candidates?.[0]?.content?.parts?.[0]?.text ||
-            'Perfecto, contame un poco más sobre tu negocio.';
+        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                      '¡Hola! ¿En qué puedo ayudarte con tu negocio hoy?';
+
+        console.log('✅ Respuesta recibida de Gemini');
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text,
-                success: true
+                text: aiText,
+                success: true,
+                timestamp: new Date().toISOString()
             })
         };
 
-    } catch (err) {
-        console.error('ERROR:', err);
-
+    } catch (error) {
+        console.error('🔥 Error en la función:', error);
+        
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text:
-                    'Perfecto. Para ayudarte mejor, contame qué tipo de negocio tenés y qué querés mejorar. ' +
-                    'Si preferís, escribinos directo por WhatsApp: https://wa.me/5493417558966',
+                text: `¡Hola! Soy Digital Rosario, tu asesor digital. 🚀\n\nAyudo a negocios locales a vender más y trabajar menos con tecnología.\n\nContame:\n• ¿Qué tipo de negocio tenés?\n• ¿Qué te gustaría mejorar o automatizar?\n\nO si preferís, hablamos directo por WhatsApp: https://wa.me/5493417558966`,
+                error: error.message,
                 fallback: true
             })
         };
