@@ -1,10 +1,11 @@
-// netlify/functions/gemini.js - CALIFICADOR COMERCIAL DIGITAL
+// netlify/functions/gemini.js - CALIFICADOR COMERCIAL DIGITAL (CORREGIDO)
 exports.handler = async function(event, context) {
     // Configurar CORS
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS, GET'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+        'Content-Type': 'application/json'
     };
 
     // Para pruebas GET
@@ -229,19 +230,21 @@ Vos no vendés.
 Vos ordenás la información para el humano.`;
 
         // 4. Preparar mensajes para Gemini
+        // Primero agregar el system prompt como un mensaje del sistema
         const contents = [
             {
-                parts: [{ text: systemPrompt + "\n\nINICIA LA CONVERSACIÓN:" }],
-                role: "user"
+                role: "user",
+                parts: [{ text: systemPrompt + "\n\nHistorial de conversación:\n" }]
             }
         ];
 
         // Agregar historial de conversación
         messages.forEach(msg => {
             if (msg.role && msg.content) {
+                const role = msg.role === 'user' ? 'user' : 'model';
                 contents.push({
-                    parts: [{ text: msg.content }],
-                    role: msg.role === 'user' ? 'user' : 'model'
+                    role: role,
+                    parts: [{ text: msg.content }]
                 });
             }
         });
@@ -249,14 +252,14 @@ Vos ordenás la información para el humano.`;
         // Agregar último mensaje del usuario
         if (userMessage) {
             contents.push({
-                parts: [{ text: userMessage }],
-                role: 'user'
+                role: 'user',
+                parts: [{ text: userMessage }]
             });
         }
 
         console.log('🤖 Calificador Comercial procesando...');
 
-        // 5. Payload para Gemini API
+        // 5. Payload para Gemini API (usando el modelo correcto)
         const payload = {
             contents: contents,
             generationConfig: {
@@ -279,7 +282,7 @@ Vos ordenás la información para el humano.`;
 
         // 6. Llamar a Gemini API
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: {
@@ -299,9 +302,8 @@ Vos ordenás la información para el humano.`;
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
-                    text: `Perfecto, te escucho. Para preparar tu información correctamente, ¿me contás a qué rubro pertenece tu negocio?`,
-                    error: true,
-                    fallback: true
+                    text: `Perfecto. Para preparar tu información correctamente, ¿me contás a qué rubro pertenece tu negocio?`,
+                    success: true
                 })
             };
         }
@@ -333,8 +335,8 @@ Vos ordenás la información para el humano.`;
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                text: `¡Hola! Veo que querés mejorar tu negocio.\n\nPara preparar tu información correctamente:\n1. ¿A qué rubro pertenece tu negocio?\n2. ¿Qué actividad realizás específicamente?\n\nO si preferís, escribinos directo:\n📱 https://wa.me/5493417558966`,
-                error: error.message,
+                text: `¡Hola! Para preparar tu información correctamente, ¿me contás a qué rubro pertenece tu negocio?`,
+                success: true,
                 fallback: true
             })
         };
