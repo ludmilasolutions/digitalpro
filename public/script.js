@@ -1,21 +1,12 @@
-// public/script.js - CORRECCIÓN DEL MANEJO DE ERRORES
+// script.js - BOT WEB SIMPLE SIN IA
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Digital Rosario - Sistema cargado con Calificador Comercial');
+    console.log('🚀 Digital Rosario - Bot comercial cargado');
     
     // ===== VARIABLES GLOBALES =====
+    let currentQuestionIndex = 0;
     let isTyping = false;
-    let isChatInitialized = false;
-    let messageHistory = [];
-    let businessInfo = {
-        rubro: null,
-        actividad: null,
-        canales: null,
-        problema: null,
-        objetivo: null
-    };
-    const API_ENDPOINT = '/.netlify/functions/gemini';
-    const WHATSAPP_NUMBER = '5493417558966';
-    const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
+    let userAnswers = {};
+    const WHATSAPP_URL = `https://wa.me/${BOT_CONFIG.whatsappNumber}`;
     
     // ===== ELEMENTOS DEL DOM =====
     const elements = {
@@ -27,7 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
         chatWidget: document.getElementById('chatWidget'),
         mobileMenuBtn: document.getElementById('mobileMenuBtn'),
         mainNav: document.querySelector('.main-nav'),
-        loadingScreen: document.getElementById('loadingScreen')
+        loadingScreen: document.getElementById('loadingScreen'),
+        mobileChatOpen: document.querySelector('.mobile-chat-open')
     };
     
     // ===== INICIALIZACIÓN =====
@@ -42,11 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1500);
         
-        // Cargar historial desde localStorage
-        loadMessageHistory();
-        
-        // Cargar info del negocio
-        loadBusinessInfo();
+        // Cargar respuestas guardadas
+        loadUserAnswers();
         
         // Inicializar chat
         initChat();
@@ -54,46 +43,164 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configurar eventos
         setupEventListeners();
         
-        console.log('✅ Sistema inicializado. Info:', businessInfo);
+        // Responsive
+        handleResponsiveChat();
+        window.addEventListener('resize', handleResponsiveChat);
+        
+        console.log('✅ Bot comercial inicializado');
     }
     
     // ===== CHAT FUNCTIONS =====
     function initChat() {
-        if (!elements.chatMessages || isChatInitialized) return;
+        if (!elements.chatMessages) return;
         
-        // Si hay historial previo, mostrarlo
-        if (messageHistory.length > 0) {
-            renderMessageHistory();
-            isChatInitialized = true;
+        // Limpiar chat
+        elements.chatMessages.innerHTML = '';
+        
+        // Verificar si ya hay respuestas guardadas
+        const savedAnswers = Object.keys(userAnswers);
+        
+        if (savedAnswers.length > 0) {
+            // Mostrar historial guardado
+            renderSavedHistory();
+            
+            // Continuar desde la última pregunta no respondida
+            currentQuestionIndex = Math.min(savedAnswers.length, BOT_CONFIG.questions.length);
+            
+            // Si ya completó todas las preguntas, mostrar resumen
+            if (savedAnswers.length === BOT_CONFIG.questions.length) {
+                showWhatsAppSummary();
+                return;
+            }
+            
+            // Mostrar siguiente pregunta
+            showNextQuestion();
+        } else {
+            // Mostrar mensaje de bienvenida
+            addMessage(BOT_CONFIG.texts.welcome, 'ai');
+            
+            // Mostrar primera pregunta después de un breve delay
+            setTimeout(() => {
+                showNextQuestion();
+            }, 1000);
+        }
+    }
+    
+    function renderSavedHistory() {
+        // Mostrar preguntas y respuestas guardadas
+        BOT_CONFIG.questions.forEach((question, index) => {
+            if (userAnswers[question.id]) {
+                // Mostrar pregunta
+                addMessage(question.text, 'ai');
+                
+                // Mostrar respuesta
+                addMessage(userAnswers[question.id], 'user');
+            }
+        });
+    }
+    
+    function showNextQuestion() {
+        if (currentQuestionIndex >= BOT_CONFIG.questions.length) {
+            // Todas las preguntas respondidas
+            showWhatsAppSummary();
             return;
         }
         
-        // Agregar mensaje inicial
+        const question = BOT_CONFIG.questions[currentQuestionIndex];
+        
+        // Mostrar pregunta con animación
         setTimeout(() => {
-            addMessage('¡Hola! Soy Digital Rosario, tu calificador comercial digital. Ayudo a negocios como el tuyo a preparar información para soluciones digitales.\n\nPara empezar, ¿me contás a qué rubro pertenece tu negocio?', 'ai');
-            isChatInitialized = true;
-        }, 1000);
+            addMessage(question.text, 'ai');
+            
+            // Actualizar placeholder
+            if (elements.userInput) {
+                elements.userInput.placeholder = question.placeholder || 'Escribí tu respuesta aquí...';
+                elements.userInput.focus();
+            }
+        }, 300);
     }
     
-    function renderMessageHistory() {
-        if (!elements.chatMessages) return;
+    function processUserAnswer(answer) {
+        if (!answer.trim()) return false;
         
-        elements.chatMessages.innerHTML = '';
+        const currentQuestion = BOT_CONFIG.questions[currentQuestionIndex];
         
-        messageHistory.forEach(msg => {
-            if (msg.role === 'system') return;
-            
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${msg.role === 'user' ? 'user' : 'ai'}`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.innerHTML = `<p>${formatMessageText(msg.content)}</p>`;
-            
-            msgDiv.appendChild(contentDiv);
-            elements.chatMessages.appendChild(msgDiv);
-        });
+        // Guardar respuesta
+        userAnswers[currentQuestion.id] = answer.trim();
+        saveUserAnswers();
         
+        // Mostrar respuesta del usuario
+        addMessage(answer, 'user');
+        
+        // Avanzar a la siguiente pregunta
+        currentQuestionIndex++;
+        
+        // Mostrar siguiente pregunta o resumen
+        if (currentQuestionIndex < BOT_CONFIG.questions.length) {
+            setTimeout(() => {
+                showNextQuestion();
+            }, 500);
+        } else {
+            setTimeout(() => {
+                addMessage(BOT_CONFIG.texts.thanks, 'ai');
+                setTimeout(() => {
+                    showWhatsAppSummary();
+                }, 1000);
+            }, 500);
+        }
+        
+        return true;
+    }
+    
+    function showWhatsAppSummary() {
+        const summaryText = generateWhatsAppSummary();
+        
+        // Crear mensaje con resumen
+        const summaryMessage = `${BOT_CONFIG.texts.summaryTitle}\n\n${summaryText}\n\n${BOT_CONFIG.texts.summaryMessage}`;
+        
+        addMessage(summaryMessage, 'ai');
+        
+        // Mostrar botón de WhatsApp
+        setTimeout(() => {
+            showWhatsAppCTA();
+        }, 500);
+    }
+    
+    function generateWhatsAppSummary() {
+        return `Hola! Quiero consultar por soluciones digitales para mi negocio.
+
+Rubro: ${userAnswers.rubro || 'No especificado'}
+Actividad: ${userAnswers.actividad || 'No especificado'}
+Canales actuales: ${userAnswers.canales || 'No especificado'}
+Problema principal: ${userAnswers.problema || 'No especificado'}
+Objetivo: ${userAnswers.objetivo || 'No especificado'}`;
+    }
+    
+    function showWhatsAppCTA() {
+        // Verificar si ya hay un CTA visible
+        if (document.querySelector('.whatsapp-cta')) return;
+        
+        const summaryText = generateWhatsAppSummary();
+        const encodedText = encodeURIComponent(summaryText);
+        const whatsappLink = `${WHATSAPP_URL}?text=${encodedText}`;
+        
+        // Crear botón de WhatsApp
+        const ctaDiv = document.createElement('div');
+        ctaDiv.className = 'message ai whatsapp-cta';
+        ctaDiv.style.marginTop = '10px';
+        
+        ctaDiv.innerHTML = `
+            <div class="message-content">
+                <a href="${whatsappLink}" target="_blank" class="whatsapp-link-btn">
+                    <i class="fab fa-whatsapp"></i> ${BOT_CONFIG.texts.whatsappCTA}
+                </a>
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    <i class="fas fa-info-circle"></i> ${BOT_CONFIG.texts.disclaimer}
+                </p>
+            </div>
+        `;
+        
+        elements.chatMessages.appendChild(ctaDiv);
         scrollToBottom();
     }
     
@@ -109,12 +216,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = `<p>${formatMessageText(text)}</p>`;
         
-        // Detectar si es un resumen de WhatsApp
-        if (sender === 'ai' && text.includes('Rubro:') && text.includes('Actividad:')) {
-            extractBusinessInfoFromSummary(text);
-        }
+        // Reemplazar saltos de línea por <br>
+        const formattedText = text.replace(/\n/g, '<br>');
+        contentDiv.innerHTML = `<p>${formattedText}</p>`;
         
         msgDiv.appendChild(contentDiv);
         elements.chatMessages.appendChild(msgDiv);
@@ -129,143 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Scroll al final
         scrollToBottom();
         
-        // Agregar al historial
-        const messageData = {
-            id: messageId,
-            role: sender === 'user' ? 'user' : 'assistant',
-            content: text,
-            timestamp: new Date().toISOString()
-        };
-        
-        messageHistory.push(messageData);
-        saveMessageHistory();
-        
-        // Limitar historial a 50 mensajes
-        if (messageHistory.length > 50) {
-            messageHistory = messageHistory.slice(-50);
-            saveMessageHistory();
-        }
-        
         return messageId;
-    }
-    
-    function extractBusinessInfoFromSummary(text) {
-        const lines = text.split('\n');
-        lines.forEach(line => {
-            if (line.includes('Rubro:')) {
-                businessInfo.rubro = line.replace('Rubro:', '').trim();
-            } else if (line.includes('Actividad:')) {
-                businessInfo.actividad = line.replace('Actividad:', '').trim();
-            } else if (line.includes('Canales actuales:')) {
-                businessInfo.canales = line.replace('Canales actuales:', '').trim();
-            } else if (line.includes('Problema principal:')) {
-                businessInfo.problema = line.replace('Problema principal:', '').trim();
-            } else if (line.includes('Objetivo:')) {
-                businessInfo.objetivo = line.replace('Objetivo:', '').trim();
-            }
-        });
-        
-        saveBusinessInfo();
-        
-        // Verificar si tenemos toda la información
-        if (businessInfo.rubro && businessInfo.actividad && businessInfo.canales && 
-            businessInfo.problema && businessInfo.objetivo) {
-            showWhatsAppCTA();
-        }
-    }
-    
-    function showWhatsAppCTA() {
-        // Esperar un momento antes de mostrar el CTA
-        setTimeout(() => {
-            const summaryText = generateWhatsAppSummary();
-            const encodedText = encodeURIComponent(summaryText);
-            const whatsappLink = `${WHATSAPP_URL}?text=${encodedText}`;
-            
-            // Crear botón de WhatsApp
-            const ctaDiv = document.createElement('div');
-            ctaDiv.className = 'message ai whatsapp-cta';
-            ctaDiv.style.marginTop = '10px';
-            
-            ctaDiv.innerHTML = `
-                <div class="message-content">
-                    <p><strong>✅ Información completa</strong></p>
-                    <p>Ya tengo toda la información para preparar tu caso. Podés continuar directamente por WhatsApp:</p>
-                    <a href="${whatsappLink}" target="_blank" class="whatsapp-link-btn" style="
-                        display: inline-block;
-                        background: #25D366;
-                        color: white;
-                        padding: 10px 20px;
-                        border-radius: 8px;
-                        text-decoration: none;
-                        font-weight: 600;
-                        margin-top: 10px;
-                        text-align: center;
-                        width: 100%;
-                        box-sizing: border-box;
-                    ">
-                        <i class="fab fa-whatsapp"></i> Continuar por WhatsApp
-                    </a>
-                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                        <i class="fas fa-info-circle"></i> Se enviará automáticamente el resumen de tu consulta
-                    </p>
-                </div>
-            `;
-            
-            elements.chatMessages.appendChild(ctaDiv);
-            scrollToBottom();
-        }, 1000);
-    }
-    
-    function generateWhatsAppSummary() {
-        return `Hola! Quiero consultar por soluciones digitales para mi negocio.
-
-Rubro: ${businessInfo.rubro || 'No especificado'}
-Actividad: ${businessInfo.actividad || 'No especificado'}
-Canales actuales: ${businessInfo.canales || 'No especificado'}
-Problema principal: ${businessInfo.problema || 'No especificado'}
-Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
-    }
-    
-    function formatMessageText(text) {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\n/g, '<br>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>');
-    }
-    
-    function showTypingIndicator() {
-        const typingId = 'typing-' + Date.now();
-        const typingDiv = document.createElement('div');
-        typingDiv.id = typingId;
-        typingDiv.className = 'message ai typing';
-        typingDiv.innerHTML = `
-            <div class="message-content">
-                <div class="typing-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        `;
-        elements.chatMessages.appendChild(typingDiv);
-        scrollToBottom();
-        return typingId;
-    }
-    
-    function removeTypingIndicator(typingId) {
-        const typingElement = document.getElementById(typingId);
-        if (typingElement) {
-            typingElement.style.opacity = '0';
-            typingElement.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                if (typingElement.parentNode) {
-                    typingElement.remove();
-                }
-            }, 300);
-        }
     }
     
     function scrollToBottom() {
@@ -280,69 +249,44 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
     }
     
     // ===== STORAGE FUNCTIONS =====
-    function saveMessageHistory() {
+    function saveUserAnswers() {
         try {
-            localStorage.setItem('digitalRosarioChatHistory', JSON.stringify(messageHistory));
+            localStorage.setItem('digitalRosarioBotAnswers', JSON.stringify(userAnswers));
+            localStorage.setItem('digitalRosarioBotQuestionIndex', currentQuestionIndex.toString());
         } catch (e) {
-            console.warn('No se pudo guardar el historial en localStorage');
+            console.warn('No se pudo guardar en localStorage');
         }
     }
     
-    function loadMessageHistory() {
+    function loadUserAnswers() {
         try {
-            const saved = localStorage.getItem('digitalRosarioChatHistory');
-            if (saved) {
-                messageHistory = JSON.parse(saved) || [];
+            const savedAnswers = localStorage.getItem('digitalRosarioBotAnswers');
+            const savedIndex = localStorage.getItem('digitalRosarioBotQuestionIndex');
+            
+            if (savedAnswers) {
+                userAnswers = JSON.parse(savedAnswers);
+            }
+            
+            if (savedIndex) {
+                currentQuestionIndex = parseInt(savedIndex);
             }
         } catch (e) {
-            console.warn('No se pudo cargar el historial desde localStorage');
-            messageHistory = [];
+            console.warn('No se pudo cargar desde localStorage');
+            userAnswers = {};
+            currentQuestionIndex = 0;
         }
     }
     
-    function saveBusinessInfo() {
-        try {
-            localStorage.setItem('digitalRosarioBusinessInfo', JSON.stringify(businessInfo));
-        } catch (e) {
-            console.warn('No se pudo guardar businessInfo');
-        }
-    }
-    
-    function loadBusinessInfo() {
-        try {
-            const saved = localStorage.getItem('digitalRosarioBusinessInfo');
-            if (saved) {
-                businessInfo = JSON.parse(saved) || {};
-            }
-        } catch (e) {
-            console.warn('No se pudo cargar businessInfo');
-            businessInfo = {
-                rubro: null,
-                actividad: null,
-                canales: null,
-                problema: null,
-                objetivo: null
-            };
-        }
-    }
-    
-    function clearMessageHistory() {
-        messageHistory = [];
-        businessInfo = {
-            rubro: null,
-            actividad: null,
-            canales: null,
-            problema: null,
-            objetivo: null
-        };
-        localStorage.removeItem('digitalRosarioChatHistory');
-        localStorage.removeItem('digitalRosarioBusinessInfo');
+    function clearUserAnswers() {
+        userAnswers = {};
+        currentQuestionIndex = 0;
+        localStorage.removeItem('digitalRosarioBotAnswers');
+        localStorage.removeItem('digitalRosarioBotQuestionIndex');
         
         if (elements.chatMessages) {
             elements.chatMessages.innerHTML = '';
         }
         
-        isChatInitialized = false;
         initChat();
     }
     
@@ -389,9 +333,8 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
         }
         
         // Mobile chat open button
-        const mobileChatOpen = document.querySelector('.mobile-chat-open');
-        if (mobileChatOpen) {
-            mobileChatOpen.addEventListener('click', openChatMobile);
+        if (elements.mobileChatOpen) {
+            elements.mobileChatOpen.addEventListener('click', openChatMobile);
         }
         
         // Cerrar chat al hacer clic fuera en mobile
@@ -407,94 +350,20 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
         });
     }
     
-    // ===== CHAT LOGIC =====
-    async function sendUserMessage() {
+    function sendUserMessage() {
         if (!elements.userInput || isTyping) return;
         
         const message = elements.userInput.value.trim();
         if (!message) return;
         
-        // Agregar mensaje del usuario
-        addMessage(message, 'user');
+        // Procesar respuesta
+        const processed = processUserAnswer(message);
         
-        // Limpiar input
-        elements.userInput.value = '';
-        elements.userInput.style.height = 'auto';
-        elements.userInput.focus();
-        
-        // Mostrar indicador de typing
-        const typingId = showTypingIndicator();
-        
-        // Marcar como procesando
-        isTyping = true;
-        
-        try {
-            // Preparar historial para enviar (últimos 20 mensajes)
-            const historyToSend = messageHistory
-                .filter(msg => msg.role !== 'system')
-                .slice(-20)
-                .map(msg => ({
-                    role: msg.role,
-                    content: msg.content
-                }));
-            
-            // Llamar a la IA
-            const response = await callAI(message, historyToSend);
-            
-            // Quitar indicador de typing
-            removeTypingIndicator(typingId);
-            
-            // Agregar respuesta de la IA
-            addMessage(response, 'ai');
-            
-        } catch (error) {
-            console.error('Error en sendUserMessage:', error);
-            removeTypingIndicator(typingId);
-            
-            // Respuesta de fallback
-            addMessage(`¡Hola! Para preparar tu información correctamente, necesito saber:\n\n1. ¿A qué rubro pertenece tu negocio?\n2. ¿Qué actividad realizás específicamente?\n\nContame en tus palabras.`, 'ai');
-        } finally {
-            isTyping = false;
-        }
-    }
-    
-    async function callAI(userMessage, history) {
-        try {
-            console.log('🤖 Enviando a Calificador Comercial:', userMessage.substring(0, 50));
-            
-            const response = await fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: userMessage,
-                    messages: history
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            // Manejar respuesta de error de manera diferente
-            if (data.error && data.error !== "API Key no configurada") {
-                // Si hay error pero no es crítico, usar el texto de fallback
-                if (data.text) {
-                    return data.text;
-                }
-                throw new Error(data.error);
-            }
-            
-            // Si no hay error, devolver el texto
-            return data.text || 'Gracias por la información. ¿Podrías contarme un poco más sobre cómo llegan los clientes a tu negocio hoy?';
-            
-        } catch (error) {
-            console.error('❌ Error en callAI:', error);
-            // Lanzar error para que sendUserMessage lo maneje con el fallback
-            throw error;
+        if (processed) {
+            // Limpiar input
+            elements.userInput.value = '';
+            elements.userInput.style.height = 'auto';
+            elements.userInput.focus();
         }
     }
     
@@ -509,7 +378,10 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
             icon.className = 'fas fa-chevron-up';
         } else {
             icon.className = 'fas fa-chevron-down';
-            setTimeout(scrollToBottom, 300);
+            setTimeout(() => {
+                elements.userInput?.focus();
+                scrollToBottom();
+            }, 300);
         }
     }
     
@@ -529,10 +401,6 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
         }
     }
     
-    // ===== INITIALIZE =====
-    init();
-    
-    // ===== RESPONSIVE CHAT =====
     function handleResponsiveChat() {
         if (window.innerWidth <= 768) {
             // En mobile, el chat inicia minimizado
@@ -545,23 +413,22 @@ Objetivo: ${businessInfo.objetivo || 'No especificado'}`;
         }
     }
     
-    // Inicializar responsive chat
-    handleResponsiveChat();
-    window.addEventListener('resize', handleResponsiveChat);
+    // ===== INITIALIZE =====
+    init();
     
     // ===== EXPORT FUNCTIONS FOR DEBUGGING =====
-    window.DigitalRosario = {
-        addMessage,
-        sendUserMessage,
-        toggleChat,
-        clearChat: clearMessageHistory,
-        messageHistory: () => messageHistory,
-        businessInfo: () => businessInfo,
-        testAPI: async () => {
-            const response = await fetch(API_ENDPOINT, { method: 'GET' });
-            return response.json();
+    window.DigitalRosarioBot = {
+        showNextQuestion,
+        processUserAnswer,
+        clearAnswers: clearUserAnswers,
+        getAnswers: () => userAnswers,
+        getCurrentQuestion: () => BOT_CONFIG.questions[currentQuestionIndex],
+        testWhatsApp: () => {
+            const summary = generateWhatsAppSummary();
+            const encoded = encodeURIComponent(summary);
+            return `${WHATSAPP_URL}?text=${encoded}`;
         }
     };
     
-    console.log('🎯 Sistema Calificador Comercial listo para usar.');
+    console.log('🎯 Bot comercial listo para usar');
 });
